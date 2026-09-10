@@ -30,6 +30,7 @@ locals {
   dataset_filename = "customer-questions.jsonl"
   dataset_format   = "jsonl"
   evaluation_name  = "Otto Born baseline"
+  evaluation_key   = "otto-born-baseline"
 
   dataset_bytes  = file(local.dataset_path)
   dataset_size   = length(local.dataset_bytes)
@@ -49,11 +50,11 @@ resource "null_resource" "create_dataset" {
       set -e
 
       ACCOUNT_ID=$(curl -s -X GET '${local.api_base}/account' \
-          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" | jq -r '._id')
+          -H "Authorization: $LD_API_TOKEN" | jq -r '._id')
       MEMBER_EMAIL='instruqt%2B${var.project_key}@launchdarkly.com'
-      MEMBER_ID=$(curl -s -X GET '${local.api_base}/members?filter=email:$MEMBER_EMAIL' \
-          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" | jq -r '.items[0]._id')
-      LD_PROJECT_ID=$(curl -s -X GET '${local.api_base}/projects/$LD_PROJECT_KEY' \
+      MEMBER_ID=$(curl -s -X GET '${local.api_base}/members?filter=email:'$MEMBER_EMAIL'' \
+          -H "Authorization: $LD_API_TOKEN" | jq -r '.items[0]._id')
+      LD_PROJECT_ID=$(curl -s -X GET '${local.api_base}/projects/'$LD_PROJECT_KEY'' \
           -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" | jq -r '._id')
 
       CREATE_RESPONSE=$(curl -fsS -X POST \
@@ -68,6 +69,7 @@ resource "null_resource" "create_dataset" {
           "filename": "${local.dataset_filename}",
           "format": "${local.dataset_format}",
           "size_bytes": ${local.dataset_size},
+          "key": "${local.evaluation_key}",
           "name": "${local.evaluation_name}"
         }')
 
@@ -109,7 +111,7 @@ resource "null_resource" "create_evaluation" {
 
       # If an evaluation with this name already exists, skip (idempotent).
       EXISTING=$(curl -fsS -X GET \
-        '${local.api_base}/projects/${var.project_key}/evaluations' \
+        '${local.int_base}/projects/${var.project_key}/evaluations' \
         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
         -H 'LD-API-Version: beta' \
         | jq -r '.items[]? | select(.name == "${local.evaluation_name}") | .id' \
@@ -168,3 +170,38 @@ resource "null_resource" "run_evaluation" {
     EOT
   }
 }
+
+# curl -fsS -X GET "https://app.launchdarkly.com/internal/projects/kcochran-ld-demo/evaluations" \
+#   -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+#   -H 'Content-Type: application/json' \
+#   -H 'LD-API-Version: beta'
+
+# EVAL_ONE=$(curl -fsS -X POST "https://app.launchdarkly.com/internal/projects/kcochran-ld-demo/evaluations" \
+#   -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+#   -H 'Content-Type: application/json' \
+#   -H 'LD-API-Version: beta' \
+#   -d '{
+#     "name":"Untitled playground",
+#     "generationModel":"Anthropic.claude-sonnet-4-5",
+#     "generationProvider":"Anthropic",
+#     "messages":[{"content":"You are a helpful assistant.","role":"system"},{"content":"{{input}}","role":"user"}],
+#     "variables":{"input":"What is the history of LaunchDarkly?"}
+#   }' | jq -r '.id')
+
+# curl -s -X DELETE "https://app.launchdarkly.com/internal/projects/kcochran-ld-demo/evaluations/ad1d0a87-441d-4d06-b345-dc96e6d44a71" \
+#   -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+#   -H 'Content-Type: application/json' \
+#   -H 'LD-API-Version: beta'
+
+#   curl -sS -X POST "https://app.launchdarkly.com/internal/projects/kcochran-ld-demo/evaluations" \
+#   -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+#   -H 'Content-Type: application/json' \
+#   -H 'LD-API-Version: beta' \
+#   -d '{
+#     "name":"Untitled playground (1)",
+#     "generationModel":"Anthropic.claude-sonnet-4-5",
+#     "generationProvider":"Anthropic",
+#     "messages":[{"content":"You are an expert assistant.","role":"system"},{"content":"{{input}}","role":"user"}],
+#     "variables":{"input":"What is the history of LaunchDarkly?"}
+#   }'
+

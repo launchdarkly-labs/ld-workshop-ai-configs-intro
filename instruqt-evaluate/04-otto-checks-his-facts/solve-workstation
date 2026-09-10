@@ -7,6 +7,7 @@
 set -e
 
 cd /opt/ld/ai-configs-intro/terraform/evaluate-04
+terraform init
 terraform apply -auto-approve
 
 python3 /opt/ld/ai-configs-intro/terraform/evaluate-04/patch-server.py

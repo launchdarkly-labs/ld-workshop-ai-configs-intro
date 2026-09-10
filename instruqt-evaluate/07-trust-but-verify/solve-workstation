@@ -11,6 +11,7 @@
 set -e
 
 cd /opt/ld/ai-configs-intro/terraform/evaluate-07
+terraform init
 terraform apply -auto-approve
 
 # Background traffic.

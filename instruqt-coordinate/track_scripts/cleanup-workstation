@@ -8,7 +8,5 @@
 
 set -euo pipefail
 
-REPO=/opt/ld/ai-configs-intro
-
-cd "${REPO}/terraform/student-bootstrap"
-terraform destroy -auto-approve -input=false || true
+cd /opt/ld/terraform-ld-student
+terraform destroy -auto-approve
