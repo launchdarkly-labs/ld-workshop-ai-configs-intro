@@ -45,11 +45,12 @@ Open the [LaunchDarkly](#tab-0) tab.
 
 1. From the left-hand navigation, click **Configs**, then click **Create config**.
 2. For **Mode**, select **Judge**.
-3. For **Name**, enter:
+3. For **What should this judge evaluate?**, enter:
 ```text
-Otto Brand Voice Judge
+Detect response is warm and friendly and score it
 ```
-4. Click **Create**.
+4. For **Judge model**, select **Bedrock**
+4. Click **Generate judge**.
 
 # Add the judge variation
 
@@ -87,7 +88,7 @@ Like any new Config, the judge defaults to its disabled variation.
 1. Click the **Targeting** tab.
 2. Make sure the environment selector reads **Test**.
 3. Make sure the Config is toggled **On**.
-4. Under **Default rule**, make sure the vairation is set to **Default**.
+4. Under **Default rule**, make sure the varation is set to **Default**.
 5. If any changes were make, click **Review and save**, then **Save changes**.
 
 # Wire Otto's Config to watch the score
@@ -103,7 +104,7 @@ Otto's main Config doesn't know about this judge yet. Tell it which metric to co
 
 # Wire the app to invoke the judge
 
-Open the [Code Editor](#tab-2) tab. Open `app/server.py`.
+Open the [Code Editor](#tab-2) tab. Open `server.py`.
 
 Find the marker comment near the bottom of the `/chat` function body:
 

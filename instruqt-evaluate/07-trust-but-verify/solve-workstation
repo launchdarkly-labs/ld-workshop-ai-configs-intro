@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Skip path for ch07. Re-applies the evaluate-07 module (Nova Pro + Stiff
+# Skip path for ch07. Re-applies the evaluate-07 module (Nova Pro + Formal
 # variation), makes sure background traffic is running, and falls back to
 # a plain percentage-rollout on the fallthrough so the check's "rollout
 # configured" proxy passes. Note: this isn't a real GUARDED rollout — the
@@ -24,26 +24,26 @@ if ! pgrep -f background_traffic.py > /dev/null; then
 fi
 
 # Percentage-rollout fallback so the check's proxy passes.
-STIFF_VAR_ID=$(curl -s -X GET \
+FORMAL_VAR_ID=$(curl -s -X GET \
   "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
   -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-  | jq -r '.variations[]? | select(.name=="Otto (Stiff)") | ._id')
+  | jq -r '.variations[]? | select(.name=="Otto (Formal)") | ._id')
 BORN_VAR_ID=$(curl -s -X GET \
   "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
   -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
   | jq -r '.variations[]? | select(.name=="Otto (Born)") | ._id')
 
-if [ -n "$STIFF_VAR_ID" ] && [ -n "$BORN_VAR_ID" ]; then
+if [ -n "$FORMAL_VAR_ID" ] && [ -n "$BORN_VAR_ID" ]; then
   curl -fsS -X PATCH \
     "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
     -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
     -H 'Content-Type: application/json; domain-model=launchdarkly.semanticpatch' \
-    --data-raw "$(jq -n --arg stiff "$STIFF_VAR_ID" --arg born "$BORN_VAR_ID" '
+    --data-raw "$(jq -n --arg formal "$FORMAL_VAR_ID" --arg born "$BORN_VAR_ID" '
       {
         environmentKey: "test",
         instructions: [{
           kind: "updateFallthroughVariationOrRollout",
-          rolloutWeights: { ($stiff): 10000, ($born): 90000 },
+          rolloutWeights: { ($formal): 10000, ($born): 90000 },
           rolloutContextKind: "user"
         }]
       }')" \

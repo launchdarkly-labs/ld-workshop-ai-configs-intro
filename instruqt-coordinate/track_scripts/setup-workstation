@@ -6,7 +6,7 @@
 # + Build's challenge-01..06 + Build's Challenge-01 server.py patch +
 # Evaluate's challenge-01/02/03/04/07. Deliberately skips Evaluate ch06
 # (creates an experiment + iteration, transient state we don't want
-# carrying over) and ch08 (deliberately flips fallthrough to otto-stiff,
+# carrying over) and ch08 (deliberately flips fallthrough to otto-formal,
 # which would leave Otto in a bad state at Coordinate's start).
 #
 # Bootstrap delay is longer here than in Evaluate — measured during
@@ -85,10 +85,10 @@ python3 "${REPO}/terraform/challenge-01/patch-server.py"
 #                   + server.py judge-invocation block
 #      evaluate-04  product-catalog snippet + claim-accuracy judge +
 #                   metric + server.py judge-invocation block
-#      evaluate-07  Nova Pro model_config + otto-stiff variation
+#      evaluate-07  Nova Pro model_config + otto-formal variation
 #    Skipped:
 #      evaluate-06  starts a prompt experiment iteration (transient)
-#      evaluate-08  flips fallthrough to otto-stiff (bad-state setup
+#      evaluate-08  flips fallthrough to otto-formal (bad-state setup
 #                   for that lab's specific drama; not wanted here)
 for ch in evaluate-01 evaluate-02 evaluate-03 evaluate-04 evaluate-07; do
     cd "${REPO}/terraform/${ch}"

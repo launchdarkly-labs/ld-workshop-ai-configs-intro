@@ -105,7 +105,7 @@ These are recorded for context — recent commits already addressed them.
 - Dataset shape (input/expected_output/metadata) confirmed from LD docs and locked in `terraform/evaluate-01/datasets/customer-questions.jsonl` (commit `82fcbab`).
 - Built-in judges' `judgeConfigKey` value isn't published; the lookup approach in `terraform/evaluate-02/main.tf` discovers them at apply-time via the configs-list API filtered by metric key (commit `2227921`).
 - Custom judges use the manual `judge_config + bedrock.converse` invocation pattern from legacy Build ch07, not the SDK's `create_judge + evaluate` flow (which needs a Bedrock provider plugin that doesn't exist; see the "Judge invocation: SDK eval + manual Bedrock call" entry in `DECISIONS.md`).
-- Variation numbering: Otto v1 (Born), Otto v2 (Premium), Otto v3 (Recommender), Otto v4 (Stiff). Consistent across all of Evaluate's authored content.
+- Variation numbering: Otto v1 (Born), Otto v2 (Premium), Otto v3 (Recommender), Otto v4 (Formal). Consistent across all of Evaluate's authored content.
 
 ---
 

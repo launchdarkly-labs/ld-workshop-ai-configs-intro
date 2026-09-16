@@ -51,7 +51,7 @@ Today you'll wire the middle one.
 
 Open the [LaunchDarkly](#tab-0) tab. Go to **Configs → Otto Assistant → Targeting**.
 
-The default rule is currently serving **Otto (Stiff)** to all users. The realchat traffic generator is sending real customer questions through; Stiff's corporate prompt makes the brand-voice judge unhappy on most of them; otto-brand-voice-score is dropping.
+The default rule is currently serving **Otto (Formal)** to all users. The realchat traffic generator is sending real customer questions through; Formal's corporate prompt makes the brand-voice judge unhappy on most of them; otto-brand-voice-score is dropping.
 
 Your job: add an in-app loop that watches the score, and when the rolling mean drops below 0.5, flips the fallthrough back to **otto-born** automatically.
 

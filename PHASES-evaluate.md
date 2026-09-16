@@ -15,7 +15,7 @@ By the end of Evaluate, the learner has used every major Lesson-2 surface of Age
 - Authored a **custom brand-voice judge** that reuses the L1 `brand-voice` snippet so the same snippet drives both Otto's prompt and the judge's grading criteria.
 - Authored a **custom product-claim judge** that uses the ToggleWear catalog as ground truth — different judge shape than brand-voice, demonstrating accuracy-against-data vs voice-against-style.
 - Run a **prompt experiment** comparing two variations on live lab traffic and promoted the winner.
-- Configured a **guarded rollout** of a risky variation (the deliberately-bad Nova Pro Stiff variation from the former Build ch07), watching the brand-voice judge metric auto-rollback the regression.
+- Configured a **guarded rollout** of a risky variation (the deliberately-bad Nova Pro Formal variation from the former Build ch07), watching the brand-voice judge metric auto-rollback the regression.
 - Wired an **adaptive switching** loop in the app — a request-time fallback that flips Otto's targeting via REST when the judge score crosses a threshold.
 
 Final challenge list (10 challenges, ~2h):
@@ -297,11 +297,11 @@ In each pair the operator picks weights for the traffic generator so the metric 
 
 **Deliverables:**
 
-- `instruqt-evaluate/07-trust-but-verify/assignment.md` — adapted from the current Build version. The flow is unchanged (configure guarded rollout in UI, watch it auto-rollback the Stiff Nova Pro variation), but the "judge" the rollout consumes is the brand-voice judge already in the project — not freshly created in this challenge. The prose needs updating to call back to challenge 03 rather than introduce judging cold.
+- `instruqt-evaluate/07-trust-but-verify/assignment.md` — adapted from the current Build version. The flow is unchanged (configure guarded rollout in UI, watch it auto-rollback the Formal Nova Pro variation), but the "judge" the rollout consumes is the brand-voice judge already in the project — not freshly created in this challenge. The prose needs updating to call back to challenge 03 rather than introduce judging cold.
 - `instruqt-evaluate/07-trust-but-verify/setup-workstation` — same idiom as the old one (apply Terraform, start background traffic). Adjust paths.
 - `instruqt-evaluate/07-trust-but-verify/check-workstation` — adapted; the judge already exists by this point.
 - `instruqt-evaluate/07-trust-but-verify/solve-workstation` — apply Terraform.
-- `terraform/evaluate-07/main.tf` — creates the Nova Pro model_config (if not already there) + the Stiff variation + the `otto-quality-score` (or whatever-it's-named) metric + wires the otto-assistant Config's `evaluationMetricKey` to the brand-voice judge's metric. Does NOT create a fresh judge Config — that one was created in challenge 03's Terraform.
+- `terraform/evaluate-07/main.tf` — creates the Nova Pro model_config (if not already there) + the Formal variation + the `otto-quality-score` (or whatever-it's-named) metric + wires the otto-assistant Config's `evaluationMetricKey` to the brand-voice judge's metric. Does NOT create a fresh judge Config — that one was created in challenge 03's Terraform.
 - `terraform/evaluate-07/patch-server.py` — likely unchanged from the legacy version, or trivially adjusted.
 - `traffic-generator/sabotage.py` and `traffic-generator/background_traffic.py` — likely unchanged; verify they reference the right metric key after the rewire.
 
@@ -319,7 +319,7 @@ In each pair the operator picks weights for the traffic generator so the metric 
 **Verification steps:**
 
 - Run setup → solve, confirm check passes.
-- Confirm the guarded rollout fires when the Stiff variation is served with organic traffic. Sabotage path still works.
+- Confirm the guarded rollout fires when the Formal variation is served with organic traffic. Sabotage path still works.
 - Confirm Build's updated welcome + wrap-up still lands cleanly (no orphan references to ch07).
 
 **Operator verification:**

@@ -2,12 +2,12 @@
 
 # Per-challenge setup for ch07 (guarded rollout).
 #
-# Applies the evaluate-07 module (adds the Nova Pro Stiff variation) and
+# Applies the evaluate-07 module (adds the Nova Pro Formal variation) and
 # swaps in the long-running background_traffic.py so the rollout has
 # organic data flowing while the learner configures it. Background traffic
-# emits otto-brand-voice-score events biased per model — Stiff scores
+# emits otto-brand-voice-score events biased per model — Formal scores
 # low, so the guarded rollout's regression detection fires once a
-# meaningful fraction of traffic hits the Stiff variation.
+# meaningful fraction of traffic hits the Formal variation.
 
 set -e
 

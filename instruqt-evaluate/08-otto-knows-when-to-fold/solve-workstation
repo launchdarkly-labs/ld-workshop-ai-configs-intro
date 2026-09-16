@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Apply the adaptive-switching end-state: TF flips fallthrough to stiff,
+# Apply the adaptive-switching end-state: TF flips fallthrough to formal,
 # patch-server installs adaptive.py + the import + the observe call, and
 # realchat traffic is started so the loop has scores to react to. The
 # loop then flips the fallthrough back to otto-born within ~60-90s.

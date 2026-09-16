@@ -36,25 +36,25 @@ enhanced_loading: null
 
 Most of this challenge is already wired:
 
-- A new variation, **Otto (Stiff)**, has been added to Otto Assistant. It's backed by Amazon Nova Pro and has a deliberately corporate-sounding prompt — formal greetings, formal sign-offs, the works.
-- Background traffic is flowing at ~1 session every 2 seconds. Each session emits an `otto-brand-voice-score` event biased by which model served it. Stiff's mean is well below the others.
+- A new variation, **Otto (Formal)**, has been added to Otto Assistant. It's backed by Amazon Nova Pro and has a deliberately corporate-sounding prompt — formal greetings, formal sign-offs, the works.
+- Background traffic is flowing at ~1 session every 2 seconds. Each session emits an `otto-brand-voice-score` event biased by which model served it. Formal's mean is well below the others.
 - The brand-voice judge from Challenge 03 is already invoking on every real `/chat` call and contributing real scores too.
 
-Your job is to **configure a guarded rollout** that splits traffic between Otto (Born) and Otto (Stiff), watches the `otto-brand-voice-score` metric, and rolls back automatically if Stiff's score regresses.
+Your job is to **configure a guarded rollout** that splits traffic between Otto (Born) and Otto (Formal), watches the `otto-brand-voice-score` metric, and rolls back automatically if Formal's score regresses.
 
 # Inspect what changed
 
 1. Open the [LaunchDarkly](#tab-0) tab.
 2. Go to **Configs → Otto Assistant**.
-3. Notice the new variation **Otto (Stiff)** in the list. Click it to see the prompt — explicitly formal, the opposite of the brand voice.
-4. Click the **Monitoring** tab and select **otto-brand-voice-score**. You should see scores accumulating — most of them in the high range (since most traffic still goes to Born), with no contribution from Stiff yet because Stiff isn't being served to anyone.
+3. Notice the new variation **Otto (Formal)** in the list. Click it to see the prompt — explicitly formal, the opposite of the brand voice.
+4. Click the **Monitoring** tab and select **otto-brand-voice-score**. You should see scores accumulating — most of them in the high range (since most traffic still goes to Born), with no contribution from Formal yet because Formal isn't being served to anyone.
 
 # Start the guarded rollout
 
 1. Click the **Targeting** tab. Confirm the environment is **test**.
 2. Click the **Default rule** (the fallthrough). You should see an option to **Start guarded rollout**.
 3. Configure:
-   - **Test variation**: **Otto (Stiff)**
+   - **Test variation**: **Otto (Formal)**
    - **Control variation**: **Otto (Born)**
    - **Metric to watch**: **otto-brand-voice-score**
    - **Regression direction**: lower is worse (the metric's success criteria is HigherThanBaseline)
@@ -64,12 +64,12 @@ Your job is to **configure a guarded rollout** that splits traffic between Otto 
 
 # Watch what happens
 
-The rollout starts at the first stage (10% Stiff). Background traffic flows through and the brand-voice score for the Stiff variation lands much lower than for Born. Within ~1-2 minutes, the rollout's regression detection should fire.
+The rollout starts at the first stage (10% Formal). Background traffic flows through and the brand-voice score for the Formal variation lands much lower than for Born. Within ~1-2 minutes, the rollout's regression detection should fire.
 
 When it does:
 
 - The rollout shows a **regression detected** event on the **Targeting** tab's rollout timeline.
-- Traffic snaps back to 100% Otto (Born). The Stiff variation gets dropped.
+- Traffic snaps back to 100% Otto (Born). The Formal variation gets dropped.
 - The monitoring view's brand-voice-score graph shows the dip during the rollout phase, then recovery after rollback.
 
 # If you want to force it

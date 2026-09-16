@@ -9,7 +9,7 @@ the duration of the challenge.
 Sessions emit the same kind of synthetic events as generate_traffic.py
 (duration, tokens, success, feedback) PLUS an otto-brand-voice-score
 event biased per model. The per-model brand-voice mean includes a
-deliberately-low value for Nova Pro (the Stiff variation) so the
+deliberately-low value for Nova Pro (the Formal variation) so the
 guarded rollout's metric drifts below threshold when traffic flows
 to it.
 
@@ -39,7 +39,7 @@ OTTO_CONFIG_KEY = "otto-assistant"
 RATE_SECONDS = float(os.getenv("TRAFFIC_RATE_SECONDS", "2.0"))
 PREMIUM_RATIO = float(os.getenv("TRAFFIC_PREMIUM_RATIO", "0.30"))
 
-# Per-model positive-feedback rates. Stiff (Nova Pro) scores low so its
+# Per-model positive-feedback rates. Formal (Nova Pro) scores low so its
 # brand-voice metric drifts below baseline when traffic flows to it.
 POSITIVE_RATE = {
     "claude-sonnet-4-5": 0.92,
@@ -117,7 +117,7 @@ def main() -> int:
             kind = FeedbackKind.Positive if random.random() < pos_rate else FeedbackKind.Negative
             tracker.track_feedback({"kind": kind})
 
-            # Emit a brand-voice score weighted by model. Stiff (Nova Pro)
+            # Emit a brand-voice score weighted by model. Formal (Nova Pro)
             # drifts the metric below threshold so the guarded rollout fires.
             mean, std = BRAND_VOICE.get(cfg.model.name, DEFAULT_BRAND_VOICE)
             score = max(0.0, min(1.0, random.gauss(mean, std)))

@@ -3,7 +3,7 @@
 # Per-challenge setup for ch08 (adaptive switching).
 #
 # Applies the evaluate-08 module, which flips Otto's fallthrough to
-# otto-stiff so real /chat traffic gets the off-brand variation and
+# otto-formal so real /chat traffic gets the off-brand variation and
 # the brand-voice judge starts scoring it low. Then swaps in the
 # realchat traffic generator so the judge actually fires.
 #

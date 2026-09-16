@@ -4,7 +4,7 @@
 For presenter-driven demos: when the rollout's organic data is too slow
 to trigger an automatic rollback, run this to flood
 otto-brand-voice-score with near-zero values tied specifically to the
-Stiff variation. Within a minute or two, the guarded rollout's
+Formal variation. Within a minute or two, the guarded rollout's
 regression detection should fire.
 
 Each iteration:
@@ -14,12 +14,12 @@ Each iteration:
      and *records the bucket against the metric pipeline*. A raw
      ld_client.track() without an eval first wouldn't attribute the
      event to a variation at all.
-  3. If the eval served the Nova-Pro Stiff variation, emits a 0.0
+  3. If the eval served the Nova-Pro Formal variation, emits a 0.0
      brand-voice-score. If it served any other variation, skips so
      the control's score stays clean.
 
 So N controls the iteration count; the actual emitted-event count
-depends on the rollout's current allocation (e.g., 10% Stiff -> ~N/10
+depends on the rollout's current allocation (e.g., 10% Formal -> ~N/10
 sabotage hits).
 
 Usage:
@@ -46,7 +46,7 @@ from ldclient import Context, LDClient  # noqa: E402
 from ldclient.config import Config as LDConfig  # noqa: E402
 
 OTTO_CONFIG_KEY = "otto-assistant"
-STIFF_MODEL_NAME = "nova-pro"  # the Stiff variation's model_config_key.model_id
+FORMAL_MODEL_NAME = "nova-pro"  # the Formal variation's model_config_key.model_id
 
 
 def main() -> int:
@@ -62,14 +62,14 @@ def main() -> int:
         print("WARN: LD client did not initialize", file=sys.stderr)
     ai_client = LDAIClient(ld_client)
 
-    print(f"Sabotage: evaluating {n} contexts; emitting 0.0 only when Stiff is served...")
+    print(f"Sabotage: evaluating {n} contexts; emitting 0.0 only when Formal is served...")
     hits = 0
     for i in range(n):
         ctx = Context.builder(f"sabotage-{uuid4().hex[:8]}").set("tier", "free").build()
         cfg = ai_client.completion_config(
             OTTO_CONFIG_KEY, ctx, AICompletionConfigDefault(enabled=False)
         )
-        if cfg.enabled and cfg.model is not None and cfg.model.name == STIFF_MODEL_NAME:
+        if cfg.enabled and cfg.model is not None and cfg.model.name == FORMAL_MODEL_NAME:
             ld_client.track("otto-brand-voice-score", ctx, None, 0.0)
             hits += 1
         else:

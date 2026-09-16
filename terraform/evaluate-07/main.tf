@@ -1,6 +1,6 @@
 # End-state for Evaluate Challenge 07 — "Trust But Verify".
 #
-# Adds the deliberately-off-brand otto-stiff variation backed by Amazon
+# Adds the deliberately-off-brand otto-formal variation backed by Amazon
 # Nova Pro. The guarded rollout that watches otto-brand-voice-score (the
 # metric introduced by Evaluate ch03) will auto-rollback this variation
 # once organic traffic + the brand-voice judge drag the metric below
@@ -17,7 +17,7 @@
 # centerpiece.
 
 locals {
-  stiff_prompt = "You are a customer service representative. Please assist customers with their inquiries in a professional and formal manner. Always greet the customer formally, provide thorough explanations, and conclude each response with a formal sign-off. Maintain a corporate tone at all times."
+  formal_prompt = "You are a customer service representative. Please assist customers with their inquiries in a professional and formal manner. Always greet the customer formally, provide thorough explanations, and conclude each response with a formal sign-off. Maintain a corporate tone at all times."
 }
 
 resource "launchdarkly_model_config" "nova_pro" {
@@ -30,15 +30,15 @@ resource "launchdarkly_model_config" "nova_pro" {
   tags           = ["instruqt"]
 }
 
-resource "launchdarkly_ai_config_variation" "otto_stiff" {
+resource "launchdarkly_ai_config_variation" "otto_formal" {
   project_key      = var.project_key
   config_key       = "otto-assistant"
-  key              = "otto-stiff"
-  name             = "Otto (Stiff)"
+  key              = "otto-formal"
+  name             = "Otto (Formal)"
   model_config_key = launchdarkly_model_config.nova_pro.key
 
   messages {
     role    = "system"
-    content = local.stiff_prompt
+    content = local.formal_prompt
   }
 }

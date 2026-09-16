@@ -6,7 +6,7 @@
 #   1. /opt/ld/ai-configs-intro/app/adaptive.py exists.
 #   2. server.py imports adaptive_observe and invokes it with score.
 #   3. The fallthrough is currently set to otto-born (the loop flipped
-#      back from the stiff state setup put it in). Soft on this — also
+#      back from the formal state setup put it in). Soft on this — also
 #      passes if the learner manually reset it.
 
 API="https://app.launchdarkly.com/api/v2"

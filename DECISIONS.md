@@ -240,7 +240,7 @@ This decision is enforced in `CLAUDE.md` ("UI instructions in assignment.md are 
 
 **Decision:** Each challenge has its own `terraform/challenge-NN/` module with its own state. Modules use:
 
-- `launchdarkly_*` resources for NEW resources introduced by that challenge (e.g. challenge-01 creates the Haiku model_config, the Config, and the first variation; challenge-05 creates the Sonnet variation; challenge-07 creates Nova Pro model_config, the Stiff variation, the judge config, and the metric).
+- `launchdarkly_*` resources for NEW resources introduced by that challenge (e.g. challenge-01 creates the Haiku model_config, the Config, and the first variation; challenge-05 creates the Sonnet variation; challenge-07 creates Nova Pro model_config, the Formal variation, the judge config, and the metric).
 - `null_resource` + `local-exec curl` for: updates to resources owned by earlier challenges' modules (which Terraform can't touch from a different module without `terraform import`), and for resources the provider doesn't yet expose (snippets, Config targeting rules, guarded rollouts, Config `evaluationMetricKey`).
 
 **Rationale:** Each challenge's solve must produce the END STATE of that challenge regardless of whether prior challenges were completed in code or skipped. Terraform's per-module state model doesn't share resources across modules, so updates to "already-managed" resources need to go through either `terraform import` (operationally heavy) or REST API (lightweight). REST via `null_resource` won.
@@ -281,7 +281,7 @@ Version-pinned. Whether omitting the version resolves to "latest" is not documen
 
 ## Guarded rollout configured by the learner, not pre-built
 
-**Decision:** Phase 7's setup pre-builds everything *except* the guarded rollout itself: the Nova Pro Stiff variation, the judge Config + metric, the server-side judge integration, and a low-rate background traffic generator. The learner configures the guarded rollout in the LD UI as the lab's actionable centerpiece.
+**Decision:** Phase 7's setup pre-builds everything *except* the guarded rollout itself: the Nova Pro Formal variation, the judge Config + metric, the server-side judge integration, and a low-rate background traffic generator. The learner configures the guarded rollout in the LD UI as the lab's actionable centerpiece.
 
 **Rationale:** Two reasons. First, LaunchDarkly's REST API for starting a guarded rollout was not publicly documented at authoring time. Second, configuring the rollout in the UI *is* the most important learning moment of the track — making the learner do it themselves reinforces the workshop's main lesson.
 
@@ -305,7 +305,7 @@ Version-pinned. Whether omitting the version resolves to "latest" is not documen
 
 **Decision:** `traffic-generator/generate_traffic.py` and `background_traffic.py` evaluate the Config to get a real tracker, then emit synthetic `track_duration`, `track_tokens`, `track_success`, and `track_feedback` events with values weighted per model. They do NOT call Bedrock.
 
-**Rationale:** Real Bedrock calls would make 120 sessions take ~10 minutes and cost real money per learner. The monitoring view only consumes the LD-side metric events, so skipping Bedrock costs nothing in terms of what the lab shows. Weights are tuned so Sonnet looks visibly better than Haiku in the dashboard, and Nova Pro Stiff looks worse — the comparison is what matters, not the absolute numbers.
+**Rationale:** Real Bedrock calls would make 120 sessions take ~10 minutes and cost real money per learner. The monitoring view only consumes the LD-side metric events, so skipping Bedrock costs nothing in terms of what the lab shows. Weights are tuned so Sonnet looks visibly better than Haiku in the dashboard, and Nova Pro Formal looks worse — the comparison is what matters, not the absolute numbers.
 
 **Side benefit:** Same generator works as a sabotage tool — see `sabotage.py`, which is just the metric-emission path without the eval boilerplate.
 
