@@ -41,16 +41,16 @@ This challenge adds a second judge that scores **accuracy against the product ca
 
 Open the [LaunchDarkly](#tab-0) tab.
 
-1. Navigate to **Configs → Snippets** and click **Create snippet**.
+1. Navigate to **Library → Snippets** and click **Create snippet**.
 2. For **Name**:
 ```text
 Product catalog
 ```
-3. For **Key**:
+3. For **Key**, make sure it is:
 ```text
 product-catalog
 ```
-4. For **Text**, paste:
+4. For **Body**, paste:
 ```text
 ToggleWear product catalog. These are the only products we sell. Anything not in this list is not a ToggleWear product.
 
@@ -69,28 +69,28 @@ Otto should not invent stock, sizes, materials beyond what's listed, colors not 
 
 # Create the judge Config
 
-1. Go to **Configs → Create config**.
-2. **Name**:
+1. From the left-hand navigation, click **Configs**, then click **Create config**.
+2. For **Mode**, select **Judge**.
+3. For **What should this judge evaluate?**, enter:
 ```text
 Otto Claim Accuracy Judge
 ```
-3. **Key**:
-```text
-otto-claim-accuracy-judge
-```
-4. **Mode**: **Judge**.
-5. **Evaluation metric** key:
-```text
-otto-claim-accuracy-score
-```
-6. Click **Create**.
+4. For **Judge model**, select **Bedrock**
+5. Click **Generate judge**.
 
 # Add the judge variation
 
-1. On the variation creation page, enter **Name** `Default` and confirm the **Key** is `default`.
-2. **Model**: **Anthropic → claude-haiku-4-5-20251001**.
-3. With **System** selected in the prompt area, click **Load snippet** and choose **product-catalog**.
-4. Below the snippet markup, paste:
+1. On the new judge config's detail page, you'll be prompted to add the first variation.
+2. For **Name**, enter:
+```text
+Default
+```
+3. Click on the **Model** dropdown, search for and select:
+```
+anthropic.claude-haiku-4-5-20251001-v1:0
+```
+4. Clear out the prompt text area, with **System** selected, click **Load snippet** and choose **product-catalog**.
+5. Below the snippet markup that the editor inserted, paste:
 ```text
 You are evaluating whether Otto's response to a customer makes any factual product claims that contradict the ToggleWear catalog above.
 
@@ -111,11 +111,22 @@ Respond with ONLY a number between 0.0 and 1.0. No other text.
 
 # Turn the judge on
 
-1. Click the **Targeting** tab on the claim-accuracy judge config.
-2. Set the **Default rule** variation to **Default**, environment **test**.
-3. Save.
+1. Click the **Targeting** tab.
+2. Make sure the environment selector reads **Test**.
+3. Make sure the Config is toggled **On**.
+4. Under **Default rule**, make sure the varation is set to **Default**.
+5. If any changes were made, click **Review and save**, then **Save changes**.
 
 > **Note:** Don't change the **Evaluation metric** on Otto Assistant. The brand-voice judge from ch03 is still Otto's primary quality signal; this judge's metric is an auxiliary signal you'll be able to compare alongside.
+
+# Add the judge to the Catalog Config
+
+1. Navigate to **Configs** → **Otto Assistant**.
+2. For both **Otto (Born)** and **Otto (Premium)** variations:
+  a. Below the prompt text area, click **+Add judges**.
+  b. Select **Otto Claim Accuracy Judge** and click **Add 1 judge**.
+  c. Set the **Sampling percentage** to **25%**.
+3. Click **Review and save**, then **Save changes**.
 
 # Wire the app to invoke the second judge
 

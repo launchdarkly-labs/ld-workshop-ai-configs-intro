@@ -83,13 +83,11 @@ Response to evaluate:
 
 # Turn the judge on
 
-Like any new Config, the judge defaults to its disabled variation.
-
 1. Click the **Targeting** tab.
 2. Make sure the environment selector reads **Test**.
 3. Make sure the Config is toggled **On**.
 4. Under **Default rule**, make sure the varation is set to **Default**.
-5. If any changes were make, click **Review and save**, then **Save changes**.
+5. If any changes were made, click **Review and save**, then **Save changes**.
 
 # Wire Otto's Config to watch the score
 
@@ -97,9 +95,9 @@ Otto's main Config doesn't know about this judge yet. Tell it which metric to co
 
 1. Navigate to **Configs** → **Otto Assistant**.
 2. For both **Otto (Born)** and **Otto (Premium)** variations:
-   a. Below the prompt text area, click **+Add judges**.
-   b. Select **Otto Brand Voice Judge** and click **Add 1 judge**.
-   c. Set the **Sampling percentage** to **25%**.
+  a. Below the prompt text area, click **+Add judges**.
+  b. Select **Otto Brand Voice Judge** and click **Add 1 judge**.
+  c. Set the **Sampling percentage** to **25%**.
 3. Click **Review and save**, then **Save changes**.
 
 # Wire the app to invoke the judge
