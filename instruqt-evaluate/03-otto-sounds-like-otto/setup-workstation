@@ -1,14 +1,17 @@
 #!/bin/sh
 
 # Per-challenge setup for ch03 (brand-voice judge).
-# Just initializes Terraform; the learner does the lab through the LD UI
-# and the code-paste step in their editor. Solve handles the apply.
+# Initializes Terraform and pre-creates the otto-brand-voice-score metric
+# (the UI flow never creates it, but the pasted server code emits to it and
+# ch06/ch07 read it). The learner builds the judge itself through the LD UI
+# and the code-paste step in their editor. Solve handles the full apply.
 
 set -e
 
 cd /opt/ld/ai-configs-intro/terraform/evaluate-03
 echo "project_key = \"${LD_PROJECT_KEY}\"" > terraform.tfvars
 terraform init -input=false
+terraform apply -auto-approve -target=launchdarkly_metric.brand_voice_score
 
 # Make sure background traffic is still flowing so the new judge has
 # something to grade as soon as the learner attaches it.

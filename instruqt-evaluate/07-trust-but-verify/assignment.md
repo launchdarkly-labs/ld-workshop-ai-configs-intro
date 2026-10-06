@@ -51,26 +51,29 @@ Your job is to **configure a guarded rollout** that splits traffic between Otto 
 
 # Start the guarded rollout
 
-1. Click the **Targeting** tab. Confirm the environment is **test**.
-2. Click the **Default rule** (the fallthrough). You should see an option to **Start guarded rollout**.
-3. Configure:
-   - **Test variation**: **Otto (Formal)**
-   - **Control variation**: **Otto (Born)**
-   - **Metric to watch**: **otto-brand-voice-score**
-   - **Regression direction**: lower is worse (the metric's success criteria is HigherThanBaseline)
-   - **Stages**: 10% → 25% → 50% → 100% (or whatever the UI offers). Each stage's monitoring window should be 1-2 minutes — short enough that the rollout completes inside the lab budget.
-4. **On regression**: choose **Rollback** (not just notify).
-5. Click **Start**.
+1. Click the **Targeting** tab. Confirm the environment pill reads **Test**.
+2. On the **Default rule** card, click the pencil (**Edit**) icon.
+3. Open the **Serve** dropdown. It groups **Variation** (each Otto variation), **Rollout** (**Manual percentage**, **Progressive rollout**, **Guarded rollout**), and **Optimize** (**Experiment**). Choose **Guarded rollout**.
+4. A guarded rollout form appears under the rule. Fill it in:
+   - **Original variation**: leave **Otto (Born)**.
+   - **Target variation**: choose **Otto (Formal)**.
+   - **Metrics to monitor**: click **Select metrics or metric groups**, tick **Otto Brand Voice Score**, click **Done**. In the metric row that appears, tick **Automatic rollback**. (Rollback direction comes from the metric itself: its success criterion is *higher is better*, so a drop counts as a regression.)
+   - **Target by**: leave **user**.
+   - **Rollout duration**: open the dropdown (it defaults to **24 hours**) and choose **Custom**. Four stages appear (5%, 10%, 25%, 50%). Set each stage's interval to **1** and its unit to **minutes** so the whole rollout fits inside the lab.
+5. Click **Review and save**. The **Save changes** dialog summarizes it as **Start release on default rule** with the rollout, original variation, duration, and metric. A **Health check warnings** notice about thin data is expected here. Click **Save**.
 
 # Watch what happens
 
-The rollout starts at the first stage (10% Formal). Background traffic flows through and the brand-voice score for the Formal variation lands much lower than for Born. Within ~1-2 minutes, the rollout's regression detection should fire.
+The Default rule card now shows the release **In progress**: the current split (5% **Otto (Formal)**, 95% **Otto (Born)**), the remaining stages, and a **Stop release** button. Background traffic flows through, and the brand-voice score for the Formal variation lands much lower than for Born. Within a minute or two, the rollout's regression detection should fire.
 
 When it does:
 
-- The rollout shows a **regression detected** event on the **Targeting** tab's rollout timeline.
+- The release timeline on the **Targeting** tab records the rollback.
+<!-- VERIFY: capture the exact wording LaunchDarkly uses when a guarded rollout auto-rolls back (the sandbox had no traffic, so this was not observed). -->
 - Traffic snaps back to 100% Otto (Born). The Formal variation gets dropped.
 - The monitoring view's brand-voice-score graph shows the dip during the rollout phase, then recovery after rollback.
+
+If you'd rather not wait, **Stop release** opens a dialog with two choices: **Roll forward** (serve Otto (Formal)) or **Roll back** (serve Otto (Born)). That's the manual version of what the guard does for you.
 
 # If you want to force it
 

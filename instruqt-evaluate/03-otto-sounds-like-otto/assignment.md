@@ -43,30 +43,33 @@ Custom judges are AgentControl Configs in **judge mode**. They have a prompt tha
 
 Open the [LaunchDarkly](#tab-0) tab.
 
-1. From the left-hand navigation, click **Configs**, then click **Create config**.
-2. For **Mode**, select **Judge**.
+1. From the left-hand navigation, click **Configs**, then click **Create config** at the top right.
+2. In the **Create config** dialog, choose **Judge** from the mode selector.
 3. For **What should this judge evaluate?**, enter:
 ```text
-Detect response is warm and friendly and score it
+Score how warm, helpful, playful, honest and concise the response is
 ```
-4. For **Judge model**, select **Bedrock**
-4. Click **Generate judge**.
-
-# Add the judge variation
-
-The judge needs a variation that defines the grading prompt.
-
-1. On the new judge config's detail page, you'll be prompted to add the first variation.
-2. For **Name**, enter:
+4. For **Judge model**, open the provider dropdown (it defaults to **Anthropic**) and select **Bedrock**.
+5. Click **Edit config key** and enter exactly:
 ```text
-Default
+otto-brand-voice-judge
 ```
-4. Click on the **Model** dropdown, search for and select:
-```
+   The key matters: the code you paste into `server.py` later looks the judge up by this key.
+6. Click **Generate judge**.
+
+LaunchDarkly drafts the judge for you: it picks a name, writes a rubric, and lands you on the new config's **Variations** tab with a **Default** variation already in place. Over the next two sections you'll replace that draft with the brand-voice rubric.
+
+# Rewrite the Default variation
+
+The generated **Default** variation runs on Sonnet 4.5 and carries a three-message rubric (a system prompt plus **MESSAGE HISTORY** and **RESPONSE TO EVALUATE** helper messages). Replace it with a single system prompt built on the brand-voice snippet.
+
+1. In the **Default** variation, click the model selector (it shows `anthropic.claude-sonnet-4-5-...`), choose **Bedrock**, and search for and select:
+```text
 anthropic.claude-haiku-4-5-20251001-v1:0
 ```
-5. Clear out the prompt text area, with **System** selected, click **Load snippet** and choose **brand-voice**.
-6. Below the snippet markup that the editor inserted, paste:
+2. Click into the **System** message, select all of its text, and delete it.
+3. With the empty System message focused, click **Load snippet** and choose **Brand voice**.
+4. On a new line below the snippet chip, paste:
 ```text
 Score the response on a scale of 0.0 to 1.0:
 - 1.0: Strongly on-brand. Warm, helpful, a little playful, honest, concise.
@@ -79,25 +82,35 @@ Respond with ONLY a number between 0.0 and 1.0. No other text.
 Response to evaluate:
 {{response}}
 ```
-7. Click **Review and save**, then **Save changes**.
+5. Delete the two helper messages below it. Hover over the **MESSAGE HISTORY** message and click its trash icon (**Delete message**); do the same for **RESPONSE TO EVALUATE**. Only the System message should remain.
+6. Click **Review and save**, then **Save changes**.
 
-# Turn the judge on
+# Fix the name and the direction
+
+The generator named the config from your description and may have guessed that a lower score is better. Both live in the right-hand panel.
+
+1. Next to **Name**, click the pencil icon, enter `Otto Brand Voice Judge`, and save.
+2. Next to **Desired direction**, click the pencil icon, choose **Higher is better**, and click the check mark to save. A 1.0 from this judge means Otto is fully on-brand.
+3. Leave **Event key** as `$ld:ai:judge:otto-brand-voice-judge`. That is the metric key LaunchDarkly records judge scores under.
+
+# Confirm the judge is on
+
+Generated judges come up enabled in every environment, but it's worth confirming.
 
 1. Click the **Targeting** tab.
-2. Make sure the environment selector reads **Test**.
-3. Make sure the Config is toggled **On**.
-4. Under **Default rule**, make sure the varation is set to **Default**.
-5. If any changes were made, click **Review and save**, then **Save changes**.
+2. Make sure the environment pill reads **Test**.
+3. The **Config is On** switch should be on, and the **Default rule** should read **Serve Default**.
+4. If you had to change anything, click **Review and save**, then **Save changes**.
 
-# Wire Otto's Config to watch the score
+# Attach the judge to Otto
 
-Otto's main Config doesn't know about this judge yet. Tell it which metric to consider its primary quality signal — the guarded rollout in ch07 will read this.
+Otto's main Config doesn't know about this judge yet. Attach it to both variations so LaunchDarkly samples Otto's responses through it.
 
 1. Navigate to **Configs** → **Otto Assistant**.
-2. For both **Otto (Born)** and **Otto (Premium)** variations:
-  a. Below the prompt text area, click **+Add judges**.
-  b. Select **Otto Brand Voice Judge** and click **Add 1 judge**.
-  c. Set the **Sampling percentage** to **25%**.
+2. For both **Otto (Born)** and **Otto (Premium)** (expand the variation if it's collapsed):
+  a. Below the prompt, click **+ Add judges**.
+  b. Tick **Otto Brand Voice Judge** and click **Add 1 judge**.
+  c. In the **Judges** table, set its **Sampling percentage** to **25**.
 3. Click **Review and save**, then **Save changes**.
 
 # Wire the app to invoke the judge
@@ -115,9 +128,12 @@ Paste the following block **immediately below** that marker line:
 ```python
     # ─── Evaluate 03: brand-voice judge ─────────────────────────────────────
     # Score Otto's response 0.0-1.0 with the otto-brand-voice-judge Config,
-    # then emit the score as an otto-brand-voice-score metric event. Errors
+    # then emit the score both as an otto-brand-voice-score metric event and
+    # through the AI tracker as a judge result (Monitoring judge card). Errors
     # are swallowed — a judge failure should not poison a user's chat.
     try:
+        from ldai.providers.types import JudgeResult
+
         bv_ctx = Context.builder(req.session_id).set("tier", req.user_tier).build()
         bv_cfg = ai_client.judge_config(
             "otto-brand-voice-judge",
@@ -147,12 +163,29 @@ Paste the following block **immediately below** that marker line:
                 score = float(bv_text.split()[0])
             except (ValueError, IndexError):
                 score = None
+
+            # Route the score through the LD AI tracker too. That records it
+            # against the judge's own event key ($ld:ai:judge:otto-brand-voice-judge),
+            # which is what the judge card on the Monitoring tab reads. The
+            # ld_client.track call below feeds the otto-brand-voice-score custom
+            # metric used by the experiment and the guarded rollout.
+            bv_result = JudgeResult(judge_config_key="otto-brand-voice-judge")
+            bv_result.sampled = True
+            bv_result.metric_key = (
+                getattr(bv_cfg, "evaluation_metric_key", None)
+                or "$ld:ai:judge:otto-brand-voice-judge"
+            )
             if score is not None and 0.0 <= score <= 1.0:
+                bv_result.score = score
+                bv_result.success = True
                 ld_client.track("otto-brand-voice-score", bv_ctx, None, score)
                 log.info(
                     "brand-voice-judge session=%s otto_model=%s score=%.2f",
                     req.session_id, model_id, score,
                 )
+            else:
+                bv_result.error_message = f"unparseable score: {bv_text!r}"
+            tracker.track_judge_result(bv_result)
     except Exception:  # noqa: BLE001
         log.exception("Brand-voice judge eval failed (non-fatal)")
 ```
@@ -161,12 +194,11 @@ Save the file. The ToggleWear service auto-reloads.
 
 # Watch the scores
 
-The realchat traffic generator is still running, so within ~1 minute the judge starts scoring real Otto responses.
+The realchat traffic generator is still running, so within ~1 minute the judge starts scoring real Otto responses. The pasted code emits each score as an `otto-brand-voice-score` metric event; that numeric metric already exists in your project (the challenge setup created it) and is what the experiment in Challenge 06 and the guarded rollout in Challenge 07 will read.
 
 1. Open the **Otto Assistant** config → **Monitoring** tab.
-2. From the metric dropdown, select **otto-brand-voice-score**.
-3. Watch the line populate.
+2. A chart card for **$ld:ai:judge:otto-brand-voice-judge** appears alongside the built-in judge cards from Challenge 02 and starts filling in as the pasted code reports each score through the tracker.
 
 The judge's score is now your custom signal for "is Otto sounding like Otto right now?" It drives the metric ch07 will use as the guarded-rollout watchdog.
 
-Click **Check** when the judge config is live and `server.py` invokes it.
+Click **Check** when the judge config is live, attached to Otto, and `server.py` invokes it.

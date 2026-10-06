@@ -62,8 +62,11 @@ def _fetch_safe_variation_id() -> Optional[str]:
     try:
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read())
+        # The targeting payload has no top-level `key` on variations; the
+        # variation key lives under value._ldMeta.variationKey.
         for v in data.get("variations", []):
-            if v.get("key") == SAFE_VARIATION_KEY:
+            meta = (v.get("value") or {}).get("_ldMeta") or {}
+            if meta.get("variationKey") == SAFE_VARIATION_KEY:
                 _safe_variation_id = v.get("_id")
                 return _safe_variation_id
     except urllib.error.URLError as e:

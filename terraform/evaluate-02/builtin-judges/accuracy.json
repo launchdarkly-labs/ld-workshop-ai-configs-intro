@@ -1,0 +1,36 @@
+{
+  "name": "Accuracy",
+  "key": "accuracy",
+  "evaluationMetricKey": "$ld:ai:judge:accuracy",
+  "mode": "judge",
+  "description": "Evaluates the accuracy of AI-generated responses against expected outcomes and factual correctness.",
+  "isInverted": false,
+  "tags": [
+    "ai",
+    "judge"
+  ],
+  "defaultVariation": {
+    "key": "default",
+    "name": "Default",
+    "model": {
+      "modelName": "Bedrock.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "parameters": {},
+      "custom": {}
+    },
+    "modelConfigKey": "Bedrock.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a business information accuracy and safety expert. Evaluate the AI-generated response for factual correctness and task relevance.\n\nEVALUATION FRAMEWORK:\nScore accuracy on a 0.0-1.0 scale, according to these rubrics:\n\n0.0-0.3 (Critical Errors): Any major factual mistakes or advice that could lead to serious harm (e.g. wrong prices, policies, security instructions, legal or medical claims).\n0.4-0.7 (Moderate Issues): Minor inaccuracies or omissions that do not change the overall outcome (e.g. small procedural variations, optional details left out).\n0.8-1.0 (Good): All key facts are correct, fully supported by the source material.\n\nSCORING PRIORITIES:\nSafety & Harm Avoidance: Any part of the response that could mislead into dangerous or costly actions.\nCore Accuracy: Correctness of facts, figures, and claims against the source material.\n"
+      },
+      {
+        "role": "assistant",
+        "content": "MESSAGE HISTORY:\n{{message_history}}\n"
+      },
+      {
+        "role": "user",
+        "content": "RESPONSE TO EVALUATE:\n{{response_to_evaluate}}\n"
+      }
+    ]
+  }
+}

@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
 """Create and start the Evaluate ch06 prompt experiment.
 
-Discovers the variationIds for otto-born and otto-recommender, fetches
-the otto-assistant config version, then POSTs to /experiments and starts
-the first iteration. Idempotent: if an experiment with the target key
-already exists, exit cleanly without touching it.
+Discovers the variationIds for otto-born and otto-recommender, the test
+environment's targeting version, and a maintainer member id, then POSTs to
+/experiments and starts the first iteration with a semantic patch.
+Idempotent: if an experiment with the target key already exists, exit
+cleanly without touching it.
 
-VERIFY: the experiment's `flags` map references a `ruleId` value. For
-fallthrough-targeted experiments the canonical value isn't documented;
-this script tries "fallthrough" first and falls back to discovering the
-ID from the targeting response. Operator may need to adjust during
-click-through.
+Verified against the live API on 2026-10-06 (kevinc-instruqt sandbox):
+
+  * The experiment create body needs `maintainerId`. The operator token is a
+    service token, so /members/me is not available; we look up the learner's
+    bootstrap member (instruqt+<project>@launchdarkly.com) and fall back to
+    the first owner/admin member.
+  * `flags.<key>.ruleId` for the default rule is the literal "fallthrough".
+    The GET response echoes it as `targetingRule: "fallthrough"`.
+  * `flags.<key>.flagConfigVersion` is the TARGETING version of the config in
+    the experiment's environment (`environments.test._version` on
+    GET .../ai-configs/{key}/targeting), not the config's own `version`.
+  * The targeting response identifies variations by `name` and
+    `value._ldMeta.variationKey`; there is no top-level `key` field.
+  * Starting the iteration is PATCH /experiments/{key} with
+    {"instructions":[{"kind":"startIteration","changeJustification":"..."}]},
+    not POST .../iterations. It fails with optimistic_locking_error if the
+    config's fallthrough is already in another running experiment.
+  * GET returns `currentIteration.status` = not_started | running | stopped.
 """
 from __future__ import annotations
 
@@ -19,11 +33,16 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API_BASE = "https://app.launchdarkly.com/api/v2"
 EXPERIMENT_KEY = "otto-prompt-experiment"
 EXPERIMENT_NAME = "Otto Prompt Experiment"
+HYPOTHESIS = (
+    "Adding a one-sentence prompt to suggest a complementary item improves "
+    "brand-voice score without going off-brand."
+)
 METRIC_KEY = "otto-brand-voice-score"
 CONFIG_KEY = "otto-assistant"
 ENV_KEY = "test"
@@ -31,7 +50,7 @@ CONTROL_VARIATION = "otto-born"
 CONTENDER_VARIATION = "otto-recommender"
 
 
-def request(method: str, path: str, body: dict | None = None, headers_extra: dict | None = None) -> dict:
+def request(method: str, path: str, body: dict | None = None) -> dict:
     token = os.environ["LAUNCHDARKLY_ACCESS_TOKEN"]
     url = f"{API_BASE}{path}"
     headers = {
@@ -39,23 +58,28 @@ def request(method: str, path: str, body: dict | None = None, headers_extra: dic
         "Content-Type": "application/json",
         "LD-API-Version": "beta",
     }
-    if headers_extra:
-        headers.update(headers_extra)
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             text = resp.read().decode()
-            return json.loads(text) if text else {}
+            # strict=False: prompt text in targeting payloads can carry raw
+            # control characters that the strict parser rejects.
+            return json.loads(text, strict=False) if text else {}
     except urllib.error.HTTPError as e:
         text = e.read().decode() if e.fp else ""
         raise SystemExit(f"{method} {path} -> HTTP {e.code}: {text}")
 
 
-def variation_ids(project_key: str) -> tuple[str, str]:
-    """Look up the variation _ids for the two participating variations."""
-    targeting = request("GET", f"/projects/{project_key}/ai-configs/{CONFIG_KEY}/targeting")
-    by_key = {v["key"]: v["_id"] for v in targeting.get("variations", [])}
+def targeting(project_key: str) -> dict:
+    return request("GET", f"/projects/{project_key}/ai-configs/{CONFIG_KEY}/targeting")
+
+
+def variation_ids(t: dict) -> tuple[str, str]:
+    by_key = {
+        (v.get("value") or {}).get("_ldMeta", {}).get("variationKey"): v["_id"]
+        for v in t.get("variations", [])
+    }
     if CONTROL_VARIATION not in by_key:
         raise SystemExit(f"Could not find control variation {CONTROL_VARIATION}")
     if CONTENDER_VARIATION not in by_key:
@@ -63,70 +87,64 @@ def variation_ids(project_key: str) -> tuple[str, str]:
     return by_key[CONTROL_VARIATION], by_key[CONTENDER_VARIATION]
 
 
-def config_version(project_key: str) -> int:
-    """Best-effort fetch of the Config's current version number."""
-    cfg = request("GET", f"/projects/{project_key}/ai-configs/{CONFIG_KEY}")
-    # Try several plausible keys; the LD API has used different shapes over time.
-    for key in ("version", "_version", "configVersion"):
-        if key in cfg:
-            return int(cfg[key])
-    # Fallback: 1. Operator confirms during click-through.
-    return 1
+def targeting_version(t: dict) -> int:
+    return int(t["environments"][ENV_KEY]["_version"])
 
 
-def fallthrough_rule_id(project_key: str) -> str:
-    """Try to find the rule ID for the fallthrough rule."""
-    targeting = request("GET", f"/projects/{project_key}/ai-configs/{CONFIG_KEY}/targeting")
-    env = targeting.get("environments", {}).get(ENV_KEY, {})
-    fallthrough = env.get("fallthrough", {})
-    # Some LD APIs expose the rule id directly here:
-    for key in ("ruleId", "_id", "id"):
-        if key in fallthrough:
-            return str(fallthrough[key])
-    # Convention fallback. Operator verifies.
-    return "fallthrough"
+def maintainer_id(project_key: str) -> str:
+    email = f"instruqt+{project_key}@launchdarkly.com"
+    res = request("GET", f"/members?filter={urllib.parse.quote('email:' + email)}")
+    items = res.get("items") or []
+    if items:
+        return items[0]["_id"]
+    res = request("GET", "/members?limit=50")
+    for role in ("owner", "admin"):
+        for m in res.get("items") or []:
+            if m.get("role") == role:
+                return m["_id"]
+    raise SystemExit("Could not resolve a maintainer member id for the experiment.")
 
 
-def experiment_exists(project_key: str) -> bool:
+def experiment(project_key: str) -> dict | None:
     try:
-        request("GET", f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}")
-        return True
+        return request("GET", f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}")
     except SystemExit as e:
         if "404" in str(e):
-            return False
+            return None
         raise
 
 
-def create_experiment(project_key: str, control_id: str, contender_id: str, rule_id: str, version: int) -> None:
+def create_experiment(project_key: str, control_id: str, contender_id: str, version: int, maintainer: str) -> None:
     payload = {
         "key": EXPERIMENT_KEY,
         "name": EXPERIMENT_NAME,
         "description": "Otto (Born) vs Otto (Recommender), graded on the brand-voice judge.",
+        "maintainerId": maintainer,
         "iteration": {
-            "hypothesis": "Adding a one-sentence prompt to suggest a complementary item improves brand-voice score without going off-brand.",
-            "metrics": [{"key": METRIC_KEY}],
+            "hypothesis": HYPOTHESIS,
+            "metrics": [{"key": METRIC_KEY, "isGroup": False, "primary": True}],
+            "primarySingleMetricKey": METRIC_KEY,
             "treatments": [
                 {
-                    "name": "Control (Born)",
+                    "name": "Otto (Born)",
                     "baseline": True,
-                    "allocationPercent": 50,
+                    "allocationPercent": "50",
                     "parameters": [{"flagKey": CONFIG_KEY, "variationId": control_id}],
                 },
                 {
-                    "name": "Contender (Recommender)",
+                    "name": "Otto (Recommender)",
                     "baseline": False,
-                    "allocationPercent": 50,
+                    "allocationPercent": "50",
                     "parameters": [{"flagKey": CONFIG_KEY, "variationId": contender_id}],
                 },
             ],
             "flags": {
                 CONFIG_KEY: {
-                    "ruleId": rule_id,
+                    "ruleId": "fallthrough",
                     "flagConfigVersion": version,
                     "notInExperimentVariationId": control_id,
                 },
             },
-            "primarySingleMetricKey": METRIC_KEY,
             "randomizationUnit": "user",
         },
     }
@@ -136,8 +154,9 @@ def create_experiment(project_key: str, control_id: str, contender_id: str, rule
 
 def start_iteration(project_key: str) -> None:
     request(
-        "POST",
-        f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}/iterations",
+        "PATCH",
+        f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}",
+        body={"instructions": [{"kind": "startIteration", "changeJustification": "Evaluate ch06 solve"}]},
     )
     print(f"Started iteration on {EXPERIMENT_KEY}")
 
@@ -147,15 +166,21 @@ def main() -> int:
     p.add_argument("--project", required=True)
     args = p.parse_args()
 
-    if experiment_exists(args.project):
-        print(f"Experiment {EXPERIMENT_KEY} already exists — no-op.")
+    existing = experiment(args.project)
+    if existing:
+        status = (existing.get("currentIteration") or {}).get("status")
+        if status == "not_started":
+            start_iteration(args.project)
+        else:
+            print(f"Experiment {EXPERIMENT_KEY} already exists (status={status}) — no-op.")
         return 0
 
-    control_id, contender_id = variation_ids(args.project)
-    version = config_version(args.project)
-    rule_id = fallthrough_rule_id(args.project)
+    t = targeting(args.project)
+    control_id, contender_id = variation_ids(t)
+    version = targeting_version(t)
+    maintainer = maintainer_id(args.project)
 
-    create_experiment(args.project, control_id, contender_id, rule_id, version)
+    create_experiment(args.project, control_id, contender_id, version, maintainer)
     start_iteration(args.project)
     return 0
 

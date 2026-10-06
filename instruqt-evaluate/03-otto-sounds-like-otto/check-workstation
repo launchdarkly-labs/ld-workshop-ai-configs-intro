@@ -2,51 +2,57 @@
 
 # Validates the learner has built the brand-voice judge end-to-end.
 #
-# Four assertions:
-#   1. otto-brand-voice-judge Config exists in judge mode.
-#   2. Its default variation has a system message that references the
-#      brand-voice snippet (key substring match — robust to either
-#      template syntax or inlined text per ch03 of Build).
-#   3. otto-brand-voice-score metric exists.
+# The judge's key is deterministic again: the Create config dialog has an
+# "Edit config key" affordance and the assignment has the learner set it to
+# otto-brand-voice-judge (verified in the live UI 2026-10-06). Everything
+# below keys off that.
+#
+# Assertions:
+#   1. otto-brand-voice-judge exists and is in judge mode.
+#   2. Its latest variation's system message references the brand-voice
+#      snippet ({{snippet.brand-voice#N}}).
+#   3. The judge is attached to otto-born (judgeConfiguration on the latest
+#      variation version).
 #   4. server.py has the brand-voice judge integration.
+#
+# Not asserted: the otto-brand-voice-score metric (setup pre-creates it) and
+# the desired direction (soft; wrong direction doesn't break later labs).
 
 API="https://app.launchdarkly.com/api/v2"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
 
-# All checks need to be skipped for now because the key and name are created by AI. The key is non-deterministic
+JUDGE=$(curl -s -X GET \
+  "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-brand-voice-judge" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
 
+if [ "$(printf '%s' "$JUDGE" | jq -r '.key // "null"')" = "null" ]; then
+  fail-message "There's no config with key **otto-brand-voice-judge** yet. In **Create config**, choose **Judge**, click **Edit config key**, and set the key to \`otto-brand-voice-judge\` before you click **Generate judge**. (If you already generated one under a different key, delete it and generate again.)"
+  exit 1
+fi
 
-# JUDGE=$(curl -fsS -X GET \
-#   "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-brand-voice-judge" \
-#   -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}")
+if [ "$(printf '%s' "$JUDGE" | jq -r '.mode // ""')" != "judge" ]; then
+  fail-message "**otto-brand-voice-judge** exists but isn't in **Judge** mode. Configs can't change mode after creation — delete it and create it again with **Judge** selected."
+  exit 1
+fi
 
-# if [ "$(echo "$JUDGE" | jq -r '.key // "null"')" = "null" ]; then
-#   fail-message "The **Otto Brand Voice Judge** config doesn't exist yet. In the LaunchDarkly UI, create a new config with mode **Judge** and key \`otto-brand-voice-judge\`."
-#   exit 1
-# fi
+SYSTEM_MSG=$(printf '%s' "$JUDGE" | jq -r '[.variations[]?] | max_by(.version) | .messages[]? | select(.role=="system") | .content' | head -c 8192)
+if ! echo "$SYSTEM_MSG" | grep -q 'snippet.brand-voice'; then
+  fail-message "The judge's **Default** variation doesn't reference the **Brand voice** snippet. Clear the System message, click **Load snippet**, choose **Brand voice**, paste the rubric below it, then **Review and save**."
+  exit 1
+fi
 
-# JUDGE_MODE=$(echo "$JUDGE" | jq -r '.mode // ""')
-# if [ "$JUDGE_MODE" != "judge" ]; then
-#   fail-message "Your **otto-brand-voice-judge** config exists but isn't in judge mode. Configs can't switch modes after creation — you may need to delete and recreate it."
-#   exit 1
-# fi
+BORN=$(curl -s -X GET \
+  "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/variations/otto-born" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+ATTACHED=$(printf '%s' "$BORN" | jq -r '(.items // []) | max_by(.version) | .judgeConfiguration.judges // [] | map(select(.judgeConfigKey == "otto-brand-voice-judge")) | length')
+if [ "$ATTACHED" -lt 1 ]; then
+  fail-message "**Otto Brand Voice Judge** isn't attached to **Otto (Born)** yet. On **Otto Assistant**, expand Otto (Born), click **+ Add judges**, tick **Otto Brand Voice Judge**, click **Add 1 judge**, then **Review and save**."
+  exit 1
+fi
 
-# SYSTEM_MSG=$(echo "$JUDGE" | jq -r '.variations[]? | .messages[]? | select(.role=="system") | .content' | head -c 4096)
-# if ! echo "$SYSTEM_MSG" | grep -q 'brand-voice'; then
-#   fail-message "The judge variation's prompt doesn't reference the **brand-voice** snippet. Use the **Load snippet** button to insert it, so the same snippet drives both Otto's prompt AND the judge's criteria."
-#   exit 1
-# fi
-
-# METRIC=$(curl -s -o /dev/null -w '%{http_code}' \
-#   "${API}/metrics/${LD_PROJECT_KEY}/otto-brand-voice-score" \
-#   -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}")
-# if [ "$METRIC" != "200" ]; then
-#   fail-message "The **otto-brand-voice-score** metric doesn't exist. Create a numeric custom metric with key \`otto-brand-voice-score\` and event key matching."
-#   exit 1
-# fi
-
-# if ! grep -q 'otto-brand-voice-judge' /opt/ld/ai-configs-intro/app/server.py; then
-#   fail-message "Your server code doesn't invoke the brand-voice judge yet. Paste the judge-invocation block from the assignment into \`server.py\` between the Challenge 01 marker comments."
-#   exit 1
-# fi
+if ! grep -q 'otto-brand-voice-judge' /opt/ld/ai-configs-intro/app/server.py; then
+  fail-message "Your server code doesn't invoke the brand-voice judge yet. Paste the judge-invocation block from the assignment into \`server.py\` immediately below the Challenge 07 marker comment."
+  exit 1
+fi
 
 exit 0

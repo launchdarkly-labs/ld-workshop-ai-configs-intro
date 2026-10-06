@@ -34,11 +34,13 @@ TARGETING=$(curl -fsS -X GET \
   "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
   -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}")
 
-FALL_VAR=$(echo "$TARGETING" | jq -r '.environments.test.fallthrough.variation // empty')
-BORN_VAR=$(echo "$TARGETING" | jq -r '[.variations[]? | select(.key=="otto-born")] | .[0]._id // empty')
+# The fallthrough is an INDEX into .variations (verified 2026-10-06), and
+# variations carry their key under value._ldMeta.variationKey.
+FALL_IDX=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.variation // empty')
+BORN_IDX=$(printf '%s' "$TARGETING" | jq -r '[.variations[]? | .value._ldMeta.variationKey] | index("otto-born") // empty')
 
-if [ -z "$FALL_VAR" ] || [ -z "$BORN_VAR" ] || [ "$FALL_VAR" != "$BORN_VAR" ]; then
-  fail-message "Your adaptive loop hasn't flipped the fallthrough back to **otto-born** yet. Give the realchat traffic another minute to accumulate samples below threshold, or check the log: \`tail -f /var/log/togglewear-realchat.log\`."
+if [ -z "$FALL_IDX" ] || [ -z "$BORN_IDX" ] || [ "$FALL_IDX" != "$BORN_IDX" ]; then
+  fail-message "Your adaptive loop hasn't flipped the fallthrough back to **otto-born** yet. Give the realchat traffic another minute to accumulate samples below threshold, or check the app log: \`journalctl -u togglewear -f\`."
   exit 1
 fi
 

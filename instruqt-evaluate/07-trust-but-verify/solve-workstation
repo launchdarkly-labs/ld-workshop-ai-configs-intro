@@ -1,12 +1,21 @@
 #!/bin/sh
 #
 # Skip path for ch07. Re-applies the evaluate-07 module (Nova Pro + Formal
-# variation), makes sure background traffic is running, and falls back to
-# a plain percentage-rollout on the fallthrough so the check's "rollout
-# configured" proxy passes. Note: this isn't a real GUARDED rollout — the
-# learner-driven UI flow is. See ../../PHASES-evaluate.md Phase 6 for the
-# start-guarded-rollout REST surface if a future revision wants to
-# automate it.
+# variation), makes sure background traffic is running, and starts a REAL
+# guarded rollout on the test environment's default rule — the same
+# semantic-patch instruction the LaunchDarkly UI sends when you choose
+# Serve -> Guarded rollout (captured 2026-10-06):
+#
+#   PATCH /api/v2/projects/{key}/ai-configs/otto-assistant/targeting
+#   {"environmentKey":"test","instructions":[{"kind":"startAutomatedRelease",
+#     "releaseKind":"guarded","originalVariationId":...,"targetVariationId":...,
+#     "randomizationUnit":"user",
+#     "stages":[{"allocation":10000,"durationMillis":60000}, ...],   # allocation is per 100000
+#     "metrics":[{"key":"otto-brand-voice-score","isGroup":false}],
+#     "metricMonitoringPreferences":{"otto-brand-voice-score":{"autoRollback":true}}}]}
+#
+# Variation ids come from the targeting response, where variations carry a
+# `name` and `value._ldMeta.variationKey` but no top-level `key`.
 
 set -e
 
@@ -23,31 +32,51 @@ if ! pgrep -f background_traffic.py > /dev/null; then
     > /var/log/togglewear-bg-traffic.log 2>&1 &
 fi
 
-# Percentage-rollout fallback so the check's proxy passes.
-FORMAL_VAR_ID=$(curl -s -X GET \
-  "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-  | jq -r '.variations[]? | select(.name=="Otto (Formal)") | ._id')
-BORN_VAR_ID=$(curl -s -X GET \
-  "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-  | jq -r '.variations[]? | select(.name=="Otto (Born)") | ._id')
+API="https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
 
-if [ -n "$FORMAL_VAR_ID" ] && [ -n "$BORN_VAR_ID" ]; then
-  curl -fsS -X PATCH \
-    "https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
-    -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-    -H 'Content-Type: application/json; domain-model=launchdarkly.semanticpatch' \
-    --data-raw "$(jq -n --arg formal "$FORMAL_VAR_ID" --arg born "$BORN_VAR_ID" '
-      {
-        environmentKey: "test",
-        instructions: [{
-          kind: "updateFallthroughVariationOrRollout",
-          rolloutWeights: { ($formal): 10000, ($born): 90000 },
-          rolloutContextKind: "user"
-        }]
-      }')" \
-    || echo "(rollout REST call failed — learner can configure in UI)"
+TARGETING=$(curl -fsS -X GET "${API}/ai-configs/otto-assistant/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+
+# Already in a guarded rollout (type measuredRollout)? Then nothing to do.
+if printf '%s' "$TARGETING" | jq -e '.environments.test.fallthrough.rollout.experimentAllocation.type == "measuredRollout"' > /dev/null 2>&1; then
+  echo "A guarded rollout is already running on otto-assistant's default rule."
+  exit 0
 fi
+
+FORMAL_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-formal") | ._id')
+BORN_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-born") | ._id')
+
+if [ -z "$FORMAL_VAR_ID" ] || [ -z "$BORN_VAR_ID" ]; then
+  echo "Could not resolve otto-formal / otto-born variation ids — learner can configure the rollout in the UI."
+  exit 0
+fi
+
+# Stages mirror the assignment: 10% -> 25% -> 50% (then 100%), one minute each
+# so the regression check has a chance to fire inside the lab budget.
+curl -fsS -X PATCH "${API}/ai-configs/otto-assistant/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta' \
+  -H 'Content-Type: application/json' \
+  --data-raw "$(jq -n --arg formal "$FORMAL_VAR_ID" --arg born "$BORN_VAR_ID" '
+    {
+      environmentKey: "test",
+      comment: "Evaluate ch07 solve: guarded rollout of Otto (Formal)",
+      instructions: [{
+        kind: "startAutomatedRelease",
+        releaseKind: "guarded",
+        originalVariationId: $born,
+        targetVariationId: $formal,
+        randomizationUnit: "user",
+        stages: [
+          { allocation: 10000, durationMillis: 60000 },
+          { allocation: 25000, durationMillis: 60000 },
+          { allocation: 50000, durationMillis: 60000 }
+        ],
+        metrics: [{ key: "otto-brand-voice-score", isGroup: false }],
+        metricMonitoringPreferences: { "otto-brand-voice-score": { autoRollback: true } }
+      }]
+    }')" > /dev/null \
+  && echo "Started guarded rollout of Otto (Formal) watching otto-brand-voice-score." \
+  || echo "(guarded rollout REST call failed — learner can configure it in the UI)"
 
 exit 0

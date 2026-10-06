@@ -14,10 +14,15 @@
 #   * null_resource set_judge_fallthrough
 #   * launchdarkly_metric              - otto-claim-accuracy-score
 #
-# evaluationMetricKey on otto-assistant is NOT changed by this module —
-# Evaluate ch03 already pointed it at otto-brand-voice-score, and the
-# guarded rollout in ch07 needs that wiring intact. The claim-accuracy
-# metric flows as an auxiliary signal in the monitoring view.
+#   * null_resource attach_judge_to_otto - add the judge to otto-born and
+#     otto-premium's judgeConfiguration (merging with existing judges)
+#
+# Model key is the GLOBAL Bedrock Haiku entry so the solve state matches
+# what the learner picks in the UI. The judge's evaluationMetricKey defaults
+# to "$ld:ai:judge:otto-claim-accuracy-judge" (that's what the UI generates).
+#
+# setup-workstation applies `-target=launchdarkly_metric.claim_accuracy_score`
+# so the metric exists in the learner path too (the UI flow never creates it).
 
 locals {
   product_catalog_text = trimspace(<<-CATALOG
@@ -94,7 +99,7 @@ resource "launchdarkly_ai_config_variation" "claim_judge_default" {
   config_key       = launchdarkly_ai_config.claim_judge.key
   key              = "default"
   name             = "Default"
-  model_config_key = "Anthropic.claude-haiku-4-5"
+  model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
 
   depends_on = [null_resource.create_product_catalog_snippet]
 
@@ -136,4 +141,38 @@ resource "launchdarkly_metric" "claim_accuracy_score" {
   analysis_type         = "mean"
   randomization_units   = ["user"]
   tags                  = ["instruqt"]
+}
+
+# ─── Attach the judge to Otto's variations ────────────────────────────────
+
+resource "null_resource" "attach_judge_to_otto" {
+  depends_on = [launchdarkly_ai_config_variation.claim_judge_default]
+
+  triggers = {
+    judge = launchdarkly_ai_config.claim_judge.key
+    rate  = "0.25"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      for V in otto-born otto-premium; do
+        CURRENT=$(curl -fsS -X GET \
+          'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/variations/'$V \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" -H 'LD-API-Version: beta' \
+          | jq -c '(.items // []) | max_by(.version) | .judgeConfiguration.judges // []')
+        if printf '%s' "$CURRENT" | jq -e 'map(.judgeConfigKey) | index("${launchdarkly_ai_config.claim_judge.key}")' > /dev/null; then
+          echo "$V already has ${launchdarkly_ai_config.claim_judge.key} attached."
+          continue
+        fi
+        curl -fsS -X PATCH \
+          'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/variations/'$V \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" -H 'LD-API-Version: beta' \
+          -H 'Content-Type: application/json' \
+          --data-raw "$(printf '%s' "$CURRENT" | jq -c '{judgeConfiguration: {judges: (. + [{judgeConfigKey: "${launchdarkly_ai_config.claim_judge.key}", samplingRate: 0.25}])}}')" \
+          > /dev/null
+        echo "Attached ${launchdarkly_ai_config.claim_judge.key} to $V."
+      done
+    EOT
+  }
 }

@@ -5,7 +5,8 @@
 # scores low, and the in-app adaptive loop has something to detect.
 #
 # No new LD resources are created — the variation and the metric all exist
-# from prior challenges. This module just kicks the fallthrough into the
+# from prior challenges. Variation ids are looked up via value._ldMeta.variationKey
+# (the targeting payload has no top-level `key` on variations; verified 2026-10-06). This module just kicks the fallthrough into the
 # "bad" state the learner will then watch their adaptive code recover from.
 
 resource "null_resource" "set_fallthrough_to_formal" {
@@ -21,7 +22,7 @@ resource "null_resource" "set_fallthrough_to_formal" {
       FORMAL_ID=$(curl -fsS -X GET \
         'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/targeting' \
         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
-        | jq -r '.variations[]? | select(.key=="otto-formal") | ._id')
+        | jq -r '.variations[]? | select(.value._ldMeta.variationKey=="otto-formal") | ._id')
 
       if [ -z "$FORMAL_ID" ] || [ "$FORMAL_ID" = "null" ]; then
         echo "Could not locate otto-formal variation. Has Challenge 07 been completed?"

@@ -12,10 +12,20 @@
 #   * null_resource set_judge_fallthrough - turn the judge on by pointing
 #                                          test env fallthrough at default
 #   * launchdarkly_metric          - otto-brand-voice-score (numeric, mean)
-#   * null_resource wire_evaluation_metric - PATCH otto-assistant's
-#                                           evaluationMetricKey to point at
-#                                           this metric. Evaluate ch07's
-#                                           guarded rollout reads this.
+#   * null_resource attach_judge_to_otto - add otto-brand-voice-judge to the
+#                                          judgeConfiguration of otto-born and
+#                                          otto-premium (merging with ch02's
+#                                          built-ins), 25% sampling.
+#
+# Verified against the live UI 2026-10-06: the Create config dialog lets the
+# learner set the key explicitly (Edit config key), judge configs carry
+# evaluationMetricKey "$ld:ai:judge:<key>" and isInverted, and judges are
+# attached to a variation via PATCH .../variations/{key} with
+# {"judgeConfiguration":{"judges":[{"judgeConfigKey":"<key>","samplingRate":0.25}]}}.
+#
+# setup-workstation applies `-target=launchdarkly_metric.brand_voice_score`
+# so the metric exists in the learner path too (the UI flow never creates
+# it, but ch06's experiment and ch07's guarded rollout need it).
 
 locals {
   brand_voice_judge_prompt = <<-PROMPT
@@ -41,13 +51,13 @@ locals {
 # ─── Brand-voice judge Config ──────────────────────────────────────────────
 
 resource "launchdarkly_ai_config" "brand_voice_judge" {
-  project_key = var.project_key
-  key         = "otto-brand-voice-judge"
-  name        = "Otto Brand Voice Judge"
+  project_key           = var.project_key
+  key                   = "otto-brand-voice-judge"
+  name                  = "Otto Brand Voice Judge"
   evaluation_metric_key = "$ld:ai:judge:otto-brand-voice-judge"
-  description = "Scores Otto's responses 0.0-1.0 for adherence to the brand-voice snippet. Drives otto-brand-voice-score; Evaluate ch07's guarded rollout watches this."
-  mode        = "judge"
-  tags        = ["instruqt", "ai-configs-intro"]
+  description           = "Scores Otto's responses 0.0-1.0 for adherence to the brand-voice snippet. Drives otto-brand-voice-score; Evaluate ch07's guarded rollout watches this."
+  mode                  = "judge"
+  tags                  = ["instruqt", "ai-configs-intro"]
 }
 
 resource "launchdarkly_ai_config_variation" "brand_voice_judge_default" {
@@ -97,27 +107,39 @@ resource "launchdarkly_metric" "brand_voice_score" {
   tags                  = ["instruqt"]
 }
 
-# ─── Wire the metric onto otto-assistant ───────────────────────────────────
+# ─── Attach the judge to Otto's variations ────────────────────────────────
 #
-# otto-assistant was created by Build's challenge-01 module; we can't update
-# it from here without `terraform import`. PATCH the evaluationMetricKey
-# directly via REST.
+# PATCHing judgeConfiguration replaces the whole list, so merge with whatever
+# is already attached (ch02's built-ins) and only add ours if missing.
 
-# resource "null_resource" "wire_evaluation_metric" {
-#   depends_on = [launchdarkly_metric.brand_voice_score,
-#                 launchdarkly_ai_config.brand_voice_judge]
+resource "null_resource" "attach_judge_to_otto" {
+  depends_on = [launchdarkly_ai_config_variation.brand_voice_judge_default]
 
-#   triggers = {
-#     metric_key = launchdarkly_metric.brand_voice_score.key
-#   }
+  triggers = {
+    judge = launchdarkly_ai_config.brand_voice_judge.key
+    rate  = "0.25"
+  }
 
-#   provisioner "local-exec" {
-#     command = <<-EOT
-#       curl -fsS -X PATCH \
-#         'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-brand-voice-judge' \
-#         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
-#         -H 'Content-Type: application/json' \
-#         --data-raw '{"evaluationMetricKey":"otto-brand-voice-score"}'
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
+      for V in otto-born otto-premium; do
+        CURRENT=$(curl -fsS -X GET \
+          'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/variations/'$V \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" -H 'LD-API-Version: beta' \
+          | jq -c '(.items // []) | max_by(.version) | .judgeConfiguration.judges // []')
+        if printf '%s' "$CURRENT" | jq -e 'map(.judgeConfigKey) | index("${launchdarkly_ai_config.brand_voice_judge.key}")' > /dev/null; then
+          echo "$V already has ${launchdarkly_ai_config.brand_voice_judge.key} attached."
+          continue
+        fi
+        curl -fsS -X PATCH \
+          'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/variations/'$V \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" -H 'LD-API-Version: beta' \
+          -H 'Content-Type: application/json' \
+          --data-raw "$(printf '%s' "$CURRENT" | jq -c '{judgeConfiguration: {judges: (. + [{judgeConfigKey: "${launchdarkly_ai_config.brand_voice_judge.key}", samplingRate: 0.25}])}}')" \
+          > /dev/null
+        echo "Attached ${launchdarkly_ai_config.brand_voice_judge.key} to $V."
+      done
+    EOT
+  }
+}

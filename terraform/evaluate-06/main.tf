@@ -34,7 +34,7 @@ resource "launchdarkly_ai_config_variation" "otto_recommender" {
   config_key       = "otto-assistant"
   key              = "otto-recommender"
   name             = "Otto (Recommender)"
-  model_config_key = "Anthropic.claude-haiku-4-5"
+  model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
 
   messages {
     role    = "system"

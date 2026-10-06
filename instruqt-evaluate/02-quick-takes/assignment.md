@@ -49,19 +49,21 @@ A low-rate stream of chat traffic is already flowing in the background, so by th
 
 Open the [LaunchDarkly](#tab-0) tab.
 
-1. Go to **Configs** → **Otto Assistant** → **Otto (Born)**.
-2. Scroll to below the prompt section and click **+ Add judges**.
-3. Select all three built-ins: **Accuracy**, **Relevance**, and **Toxicity**, then click **Add 3 judges**.
-4. Set the sampling rate for each to **25%**.
-5. Click **Review and save**, then **Save changes**.
+1. Go to **Configs** → **Otto Assistant**. The **Otto (Born)** variation is expanded at the top of the **Variations** tab.
+2. Below the prompt, next to **Add message** and **Add tools**, click **+ Add judges**.
+3. Tick **All judges** (or tick **Accuracy**, **Relevance**, and **Toxicity** individually), then click **Add 3 judges**.
+4. A **Judges** table appears under the prompt with one row per judge, showing its **Event key** (`$ld:ai:judge:accuracy` and so on), a **Provider** dropdown, and a **Sampling percentage** that defaults to 10%. Set each sampling percentage to **25**.
+5. At the top right, click **Review and save**, then **Save changes**.
+
+Adding the judges also created three judge-mode configs in your project — **Accuracy**, **Relevance**, and **Toxicity** — which you'll see in the Configs list. Those are the judges themselves; what you attached to Otto (Born) is a reference to each one plus a sampling rate.
 
 # Watch the scores
 
 The background traffic generator is sending Otto ~20 questions per minute. At 25% sampling, each judge fires roughly 5 times a minute — fast enough that within a couple of minutes the monitoring view has visible data.
 
-1. Click the **Monitoring** tab.
-2. From the metric dropdown, select **Evaluator metrics**.
-3. You should see three lines start to populate — one per judge — over the last few minutes.
+1. Click the **Monitoring** tab and confirm the environment pill reads **Test**.
+2. Three new chart cards sit below the cost and request cards: **$ld:ai:judge:accuracy**, **$ld:ai:judge:relevance**, and **$ld:ai:judge:toxicity**. They appear automatically once judges are attached. If you don't see them, open the **Charts** selector and tick **Accuracy**, **Relevance**, and **Toxicity**.
+3. Within a couple of minutes each card starts plotting scores, and the per-variation table at the bottom gains **Accuracy**, **Relevance**, and **Toxicity** columns.
 
 Give it a minute or two if scores haven't appeared yet. The first scores typically land within 60-90 seconds of attaching the judges.
 

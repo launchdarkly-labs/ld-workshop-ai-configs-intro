@@ -45,7 +45,7 @@ A 30-question dataset is already in your project. Your job is to point an evalua
 1. From the left-hand navigation, where you see the **Code | Agents** selector, click **Agents**
 1. Click **Playgrounds** in the left navigation.
 2. Click **New playground**.
-3. Click **Untitled Playground** at the top and enter:
+3. Click **Untitled playground** at the top, select the existing text, and replace it with:
 ```text
 Otto Born baseline
 ```
@@ -53,40 +53,38 @@ Otto Born baseline
 # Side **A**
 
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
-2. Click **Otto Assistant** on the left, and on the right, select the **Otto (Born)** variation.
+2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Born)**.
 3. Click **Load config**.
-4. From the list of models, search for and select:
+4. The model selector at the top of side A should now read **anthropic.claude-haiku-4-5-20251001-v1:0** (Bedrock). If it still says **Select model**, click it, choose **Bedrock**, and search for:
 ```text
 claude-haiku-4-5-20251001
 ```
-5. Below the loaded prompt textarea, click **Add message**.
-6. In the new prompt textarea, enter:
+5. Below the loaded prompt textarea, click **Add message**. The new message defaults to the **User** role.
+6. In the new message textarea, enter:
 ```text
 {{input}}
 ```
-7. Click **Save**
 
 # Side **B**
 
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
-2. Click **Otto Assistant** on the left, and on the right, select the **Otto (Premium)** variation.
+2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Premium)**.
 3. Click **Load config**.
-4. From the list of models, search for and select:
+4. The model selector at the top of side B should now read **anthropic.claude-sonnet-4-6** (Bedrock). If it still says **Select model**, click it, choose **Bedrock**, and search for:
 ```text
 claude-sonnet-4-6
 ```
-5. Below the loaded prompt textarea, click **Add message**.
-6. In the new prompt textarea, enter:
+5. Below the loaded prompt textarea, click **Add message**. The new message defaults to the **User** role.
+6. In the new message textarea, enter:
 ```text
 {{input}}
 ```
-7. Click **Save**
 
 # Select Dataset
 
 1. At the bottom of the screen, grab and drag the dark gray bar up so you can see the controls.
-2. Click **Select a dataset to evaluate**, and select **Otto Born baseline**.
-3. To the right of the selector, click **Random**, and for **Rows**, enter **15**.
+2. Click **Select a dataset (optional)**, and select **Otto Born baseline**.
+3. To the right of the selector, click **Random**. The **Rows** field resets to 30 — change it to **15**.
 
 # Configure acceptance criteria
 
@@ -95,12 +93,12 @@ The evaluation needs to know how to grade Otto's responses against each row's `e
 **Note**: If the right-hand pane is still collapsed, press `]` to open it.
 
 1. In the **Acceptance criteria** panel on the right, click **Add criteria** and select **Answer Relevancy**.
-2. Leave the defaults as-is.
+2. Leave the defaults as-is (pass when score ≥ 0.5, minimum pass rate 95%).
 
 # Run the evaluation
 
-1. At the top right, click **Run all**.
-2. The run takes roughly a minute — Otto answers each of the 10 questions and the judge grades each answer.
+1. At the top right, click **Run all**. This saves both sides and starts one run per side.
+2. The run takes roughly a minute — both versions of Otto answer each of the 15 sampled questions and the judge grades each answer.
 
 # Read the results
 

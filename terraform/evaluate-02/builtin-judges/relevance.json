@@ -1,0 +1,36 @@
+{
+  "name": "Relevance",
+  "key": "relevance",
+  "evaluationMetricKey": "$ld:ai:judge:relevance",
+  "mode": "judge",
+  "description": "Assesses how relevant and on-topic AI responses are to the given prompts and context.",
+  "isInverted": false,
+  "tags": [
+    "ai",
+    "judge"
+  ],
+  "defaultVariation": {
+    "key": "default",
+    "name": "Default",
+    "model": {
+      "modelName": "Bedrock.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "parameters": {},
+      "custom": {}
+    },
+    "modelConfigKey": "Bedrock.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a business information accuracy and safety expert. Evaluate the AI-generated response for task relevance.\n\nEVALUATION FRAMEWORK:\nScore relevance on a 0.0-1.0 scale, according to these rubrics:\n\n0.0-0.3 (Off-Topic/Incomplete): Fails to address the core question or omits major sub-questions.\n0.4-0.7 (Partially Relevant): Covers some correct aspects but misses important elements of the user's request.\n0.8-1.0 (Highly Relevant): Directly and completely answers the user's question.\n\nSCORING PRIORITIES:\nSafety & Harm Avoidance: Any part of the response that could mislead into dangerous or costly actions.\nRelevance & Utility: Does the response satisfy the user's need?"
+      },
+      {
+        "role": "assistant",
+        "content": "MESSAGE HISTORY:\n{{message_history}}\n"
+      },
+      {
+        "role": "user",
+        "content": "RESPONSE TO EVALUATE:\n{{response_to_evaluate}}\n"
+      }
+    ]
+  }
+}

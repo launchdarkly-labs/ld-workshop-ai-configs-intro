@@ -389,3 +389,49 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 
 **Trade-offs accepted:**
 - The lab introduces three distinct in-app generators (`realchat_traffic.py`, `experiment_traffic.py`, `background_traffic.py`) to drive each mechanism's lab — each setup-workstation swaps to the right one for the challenge. Slight operational complexity in exchange for each lab having appropriate signal characteristics.
+
+---
+
+## Evaluate uses LaunchDarkly's undocumented `/internal` REST surface for datasets, playgrounds, and runs (2026-10-06)
+
+**Decision:** Evaluate ch01's setup/check/solve scripts and `terraform/evaluate-01` call `https://app.launchdarkly.com/internal/projects/{key}/{datasets,evaluations,playgrounds}` directly. The request/response shapes are captured from the LD web app's own traffic and recorded in `instruqt-evaluate/INTERNAL-API.md`.
+
+**Rationale:**
+- Offline evaluation (datasets, playgrounds, evaluation runs) has no `/api/v2` surface and no Terraform resources as of 2026-10-06. The UI is the only documented path.
+- The internal endpoints accept the same `Authorization: <api token>` + `LD-API-Version: beta` headers as `/api/v2`, so operator-context scripts can drive them without a browser session.
+- The alternative (make ch01 UI-only with no Skip and a weak Check) violates the definition of done for solve/check parity.
+
+**Trade-offs accepted:**
+- No stability guarantee. If LD changes the shapes, ch01's check/solve break silently. Mitigation: `INTERNAL-API.md` documents exactly what was captured and how, so re-capturing is a 15-minute job with the browser's network panel (or Claude Code driving Chrome via the DevTools MCP plugin, which is how this capture was done).
+- The "evaluation" noun in the internal API means one playground *column*, not the whole exercise. Scripts and comments use the UI's object model (dataset → evaluation/column → playground → run) to avoid confusion.
+- The completed-run `state` string was not observed (see below), so `check-workstation` tests for graded rows via the `/summary` endpoint instead of matching an enum.
+
+**Operator-side dependency surfaced by this work:** playground runs execute on LD's backend using the **account-level** "Manage API keys" BYOK integration (`aiconfig-test-run`). For Bedrock this is an IAM role LD assumes with an external ID, configured once per LD account. The Instruqt account the IdP simulator logs learners into must have a working Bedrock configuration or every ch01 run ends in `PERMANENT_ERROR: Bedrock request failed: AccessDenied (HTTP 403)`. Added to `OPERATOR-CHECKLIST-evaluate.md`.
+
+---
+
+## Custom judge keys are set explicitly via "Edit config key" (2026-10-06)
+
+**Decision:** Evaluate ch03 and ch04 have the learner click **Edit config key** in the Create config dialog and type `otto-brand-voice-judge` / `otto-claim-accuracy-judge` before **Generate judge**. The server pastes, check scripts, and Terraform all key off those literal keys again.
+
+**Rationale:** The judge generator otherwise derives the key from an AI-generated name, which made the keys non-deterministic and forced the check scripts to be disabled. The dialog exposes the key field (verified in the live UI), so determinism costs one click.
+
+**Side effects:** Generated judges arrive with an AI name, a Sonnet 4.5 Default variation carrying `{{message_history}}` / `{{response_to_evaluate}}` helper messages, and a possibly inverted desired direction. The assignments now walk the learner through replacing the model and prompt, deleting the helper messages, renaming, and setting **Higher is better**. We keep `{{response}}` as the template variable because the server pastes supply it; the LD-native `{{response_to_evaluate}}` convention is noted in `INTERNAL-API.md` for a future revision.
+
+---
+
+## Custom metrics are pre-created by challenge setup, not by the learner (2026-10-06)
+
+**Decision:** ch03 and ch04 `setup-workstation` apply `terraform apply -target=launchdarkly_metric.<name>` so `otto-brand-voice-score` and `otto-claim-accuracy-score` exist before the learner starts. The assignments mention the metric exists; they do not add a "create a metric" section.
+
+**Rationale:** No revision of the ch03/ch04 UI flow ever created these metrics (the old "Evaluation metric" step set the judge's event key, which is a different thing), yet the server pastes emit to them and ch06's experiment and ch07's guarded rollout select them by name. Pre-creating keeps the judge labs focused on judges. Operator may still choose to teach metric creation; see the checklist.
+
+---
+
+## Evaluate solve scripts drive experiments and guarded rollouts through the public API (2026-10-06)
+
+**Decision:** `terraform/evaluate-06/setup-experiment.py` creates the experiment with `maintainerId`, `ruleId: "fallthrough"`, and the targeting environment `_version`, then starts it with the `startIteration` semantic patch. `instruqt-evaluate/07-trust-but-verify/solve-workstation` starts a real guarded rollout with the `startAutomatedRelease` instruction on the ai-config targeting endpoint (stages 10/25/50% at one minute each, auto-rollback on `otto-brand-voice-score`). Both payloads were captured from the UI and replayed with the operator token.
+
+**Rationale:** The previous solve for ch07 fell back to a plain percentage rollout, which the rewritten check correctly rejects as "not guarded". Skip must land in the same state as a successful learner.
+
+**Trade-offs accepted:** `startAutomatedRelease` is a public endpoint but the guarded-release history used by the check lives on an internal endpoint; the check only needs it when the rollout has already finished or rolled back.

@@ -2,45 +2,67 @@
 
 # Validates the learner has set up the guarded rollout.
 #
-# Three assertions:
-#   1. The otto-formal Nova Pro variation exists (setup-workstation creates
-#      it; we re-check in case the learner deleted it).
-#   2. otto-assistant's evaluationMetricKey points at otto-brand-voice-score
-#      (set by ch03; double-checked here for the rollout to make sense).
-#   3. A guarded rollout (or at least a rollout structure) is configured on
-#      the test environment's fallthrough — permissive proxy for "rollout
-#      configured."
+# Assertions (verified against the live API 2026-10-06):
+#   1. The otto-formal variation exists and runs on Amazon Nova Pro
+#      (modelConfigKey contains "nova-pro" — the TF module creates a custom
+#      "Amazon.nova-pro" config, the UI offers the global
+#      "Bedrock.amazon.nova-pro-v1:0"; either is fine).
+#   2. A guarded rollout exists for otto-assistant in the test environment:
+#      either it is running right now (targeting fallthrough is a rollout
+#      whose experimentAllocation.type is "measuredRollout" — experiments use
+#      "experiment", plain percentage rollouts have no experimentAllocation),
+#      OR a guarded release has already run (it may have auto-rolled-back,
+#      which is the point of the lab). The release history lives on the
+#      internal automated-releases endpoint.
+#
+# No longer asserted: otto-assistant.evaluationMetricKey. The guarded rollout
+# picks its metric directly in the UI, and nothing in Evaluate sets that field.
 
 API="https://app.launchdarkly.com/api/v2"
+INT="https://app.launchdarkly.com/internal"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
 
 CONFIG=$(curl -fsS -X GET \
   "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}")
+  -H "$AUTH" -H 'LD-API-Version: beta')
 
-FORMAL=$(echo "$CONFIG" | jq -r '.variations[]? | select(.key=="otto-formal") | .modelConfigKey // ""')
+FORMAL=$(printf '%s' "$CONFIG" | jq -r '.variations[]? | select(.key=="otto-formal") | .modelConfigKey // ""')
 if [ -z "$FORMAL" ]; then
   fail-message "The **Otto (Formal)** Nova Pro variation hasn't been created. Re-run setup, or use the **Skip** button if setup isn't working."
   exit 1
 fi
-if [ "$FORMAL" != "Amazon.nova-pro" ]; then
-  fail-message "Otto (Formal) isn't using Amazon Nova Pro. Expected modelConfigKey **Amazon.nova-pro**, got **${FORMAL}**."
-  exit 1
-fi
-
-EVAL_KEY=$(echo "$CONFIG" | jq -r '.evaluationMetricKey // ""')
-if [ "$EVAL_KEY" != "otto-brand-voice-score" ]; then
-  fail-message "Otto's evaluationMetricKey isn't wired to **otto-brand-voice-score**. Was Challenge 03 completed? The guarded rollout needs a metric to watch."
-  exit 1
-fi
+case "$(echo "$FORMAL" | tr 'A-Z' 'a-z')" in
+  *nova-pro*) ;;
+  *)
+    fail-message "Otto (Formal) isn't using Amazon Nova Pro. Expected a model config containing **nova-pro**, got **${FORMAL}**."
+    exit 1
+    ;;
+esac
 
 TARGETING=$(curl -fsS -X GET \
   "${API}/projects/${LD_PROJECT_KEY}/ai-configs/otto-assistant/targeting" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}")
+  -H "$AUTH" -H 'LD-API-Version: beta')
 
-HAS_ROLLOUT=$(echo "$TARGETING" | jq -r '.environments.test.fallthrough.rollout // empty')
-if [ -z "$HAS_ROLLOUT" ]; then
-  fail-message "No guarded rollout configured on the test environment's default rule. On the **Targeting** tab, click the default rule and choose **Start guarded rollout** with the **otto-brand-voice-score** metric."
+ACTIVE_GUARDED=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.rollout.experimentAllocation.type // ""')
+if [ "$ACTIVE_GUARDED" = "measuredRollout" ]; then
+  exit 0
+fi
+
+RELEASES=$(curl -s -X GET \
+  "${INT}/projects/${LD_PROJECT_KEY}/flags/otto-assistant/automated-releases?filter=kind%3Aguarded%2CenvironmentKey%3Atest" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+RELEASE_COUNT=$(printf '%s' "$RELEASES" | jq -r '(.items // []) | length' 2>/dev/null || echo 0)
+
+if [ "${RELEASE_COUNT:-0}" -ge 1 ]; then
+  # A guarded release ran (and may already have rolled back). That's a pass.
+  exit 0
+fi
+
+HAS_PLAIN_ROLLOUT=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.rollout // empty')
+if [ -n "$HAS_PLAIN_ROLLOUT" ]; then
+  fail-message "The default rule is a plain percentage rollout, not a **guarded** one. Click **Edit** on the Default rule, open **Serve**, and choose **Guarded rollout** so a metric is watching the release."
   exit 1
 fi
 
-exit 0
+fail-message "No guarded rollout has been started on the **Test** environment's default rule. On the **Targeting** tab, click **Edit** on the Default rule, open **Serve**, choose **Guarded rollout**, pick **Otto (Formal)** as the target, add the **Otto Brand Voice Score** metric with **Automatic rollback**, and **Review and save**."
+exit 1

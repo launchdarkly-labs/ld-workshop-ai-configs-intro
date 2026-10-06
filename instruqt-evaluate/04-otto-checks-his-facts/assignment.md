@@ -42,14 +42,12 @@ This challenge adds a second judge that scores **accuracy against the product ca
 Open the [LaunchDarkly](#tab-0) tab.
 
 1. Navigate to **Library → Snippets** and click **Create snippet**.
-2. For **Name**:
+2. For **Name**, enter:
 ```text
 Product catalog
 ```
-3. For **Key**, make sure it is:
-```text
-product-catalog
-```
+   There is no key field. LaunchDarkly derives the key from the name, so this name yields `product-catalog`, which is the key the judge prompt and the server code reference.
+3. Leave **Description** empty.
 4. For **Body**, paste:
 ```text
 ToggleWear product catalog. These are the only products we sell. Anything not in this list is not a ToggleWear product.
@@ -65,32 +63,34 @@ ToggleWear product catalog. These are the only products we sell. Anything not in
 
 Otto should not invent stock, sizes, materials beyond what's listed, colors not listed, return policies, shipping details, or any other facts not stated above. He may suggest customers check the product page or contact support for specifics he doesn't have.
 ```
-5. Click **Save**.
+5. Click **Save**. The snippet appears in the list; use its **Copy key** button to confirm the key reads `product-catalog`.
 
 # Create the judge Config
 
 1. From the left-hand navigation, click **Configs**, then click **Create config**.
-2. For **Mode**, select **Judge**.
+2. In the **Create config** dialog, choose **Judge**.
 3. For **What should this judge evaluate?**, enter:
 ```text
-Otto Claim Accuracy Judge
+Check whether product claims in the response match the ToggleWear catalog
 ```
-4. For **Judge model**, select **Bedrock**
-5. Click **Generate judge**.
-
-# Add the judge variation
-
-1. On the new judge config's detail page, you'll be prompted to add the first variation.
-2. For **Name**, enter:
+4. For **Judge model**, open the provider dropdown and select **Bedrock**.
+5. Click **Edit config key** and enter exactly:
 ```text
-Default
+otto-claim-accuracy-judge
 ```
-3. Click on the **Model** dropdown, search for and select:
-```
+6. Click **Generate judge**.
+
+As in Challenge 03, LaunchDarkly drafts a name, a rubric, and a **Default** variation. You'll replace the rubric with one grounded in the catalog snippet.
+
+# Rewrite the Default variation
+
+1. In the **Default** variation, click the model selector, choose **Bedrock**, and search for and select:
+```text
 anthropic.claude-haiku-4-5-20251001-v1:0
 ```
-4. Clear out the prompt text area, with **System** selected, click **Load snippet** and choose **product-catalog**.
-5. Below the snippet markup that the editor inserted, paste:
+2. Click into the **System** message, select all of its text, and delete it.
+3. With the empty System message focused, click **Load snippet** and choose **Product catalog**.
+4. On a new line below the snippet chip, paste:
 ```text
 You are evaluating whether Otto's response to a customer makes any factual product claims that contradict the ToggleWear catalog above.
 
@@ -107,25 +107,24 @@ Score 0.0 to 1.0:
 
 Respond with ONLY a number between 0.0 and 1.0. No other text.
 ```
-5. Click **Review and save**, then **Save changes**.
+5. Delete the generated **MESSAGE HISTORY** and **RESPONSE TO EVALUATE** helper messages (hover each and click its trash icon). Only the System message should remain.
+6. Click **Review and save**, then **Save changes**.
+7. In the right-hand panel, click the pencil next to **Name** and rename the config to `Otto Claim Accuracy Judge`. Then click the pencil next to **Desired direction**, choose **Higher is better**, and save.
 
-# Turn the judge on
+# Confirm the judge is on
 
 1. Click the **Targeting** tab.
-2. Make sure the environment selector reads **Test**.
-3. Make sure the Config is toggled **On**.
-4. Under **Default rule**, make sure the varation is set to **Default**.
-5. If any changes were made, click **Review and save**, then **Save changes**.
+2. Make sure the environment pill reads **Test**, the **Config is On** switch is on, and the **Default rule** reads **Serve Default**. Generated judges start this way; fix and **Review and save** only if something differs.
 
-> **Note:** Don't change the **Evaluation metric** on Otto Assistant. The brand-voice judge from ch03 is still Otto's primary quality signal; this judge's metric is an auxiliary signal you'll be able to compare alongside.
+> **Note:** The brand-voice judge from Challenge 03 stays Otto's primary quality signal (it is what the experiment and guarded rollout read). This judge's score is an auxiliary signal you'll compare alongside it.
 
-# Add the judge to the Catalog Config
+# Attach the judge to Otto
 
 1. Navigate to **Configs** → **Otto Assistant**.
-2. For both **Otto (Born)** and **Otto (Premium)** variations:
-  a. Below the prompt text area, click **+Add judges**.
-  b. Select **Otto Claim Accuracy Judge** and click **Add 1 judge**.
-  c. Set the **Sampling percentage** to **25%**.
+2. For both **Otto (Born)** and **Otto (Premium)**:
+  * Below the prompt, click **+ Add judges**.
+  * Tick **Otto Claim Accuracy Judge** and click **Add 1 judge**.
+  * In the **Judges** table, set its **Sampling percentage** to **25**.
 3. Click **Review and save**, then **Save changes**.
 
 # Wire the app to invoke the second judge
@@ -147,6 +146,8 @@ Paste the following block **immediately below** the marker. (It'll end up above 
     # Pass both {{input}} (the customer's question) and {{response}} as
     # template variables so the judge can ground its grading in context.
     try:
+        from ldai.providers.types import JudgeResult
+
         cl_ctx = Context.builder(req.session_id).set("tier", req.user_tier).build()
         cl_cfg = ai_client.judge_config(
             "otto-claim-accuracy-judge",
@@ -179,12 +180,29 @@ Paste the following block **immediately below** the marker. (It'll end up above 
                 score = float(cl_text.split()[0])
             except (ValueError, IndexError):
                 score = None
+
+            # Route the score through the LD AI tracker too. That records it
+            # against the judge's own event key ($ld:ai:judge:otto-claim-accuracy-judge),
+            # which is what the judge card on the Monitoring tab reads. The
+            # ld_client.track call below feeds the otto-claim-accuracy-score custom
+            # metric used by the experiment and the guarded rollout.
+            cl_result = JudgeResult(judge_config_key="otto-claim-accuracy-judge")
+            cl_result.sampled = True
+            cl_result.metric_key = (
+                getattr(cl_cfg, "evaluation_metric_key", None)
+                or "$ld:ai:judge:otto-claim-accuracy-judge"
+            )
             if score is not None and 0.0 <= score <= 1.0:
+                cl_result.score = score
+                cl_result.success = True
                 ld_client.track("otto-claim-accuracy-score", cl_ctx, None, score)
                 log.info(
                     "claim-accuracy-judge session=%s otto_model=%s score=%.2f",
                     req.session_id, model_id, score,
                 )
+            else:
+                cl_result.error_message = f"unparseable score: {cl_text!r}"
+            tracker.track_judge_result(cl_result)
     except Exception:  # noqa: BLE001
         log.exception("Claim-accuracy judge eval failed (non-fatal)")
 ```
@@ -193,8 +211,8 @@ Save. Service auto-reloads.
 
 # Compare the two judges
 
-In the **Otto Assistant** → **Monitoring** view, switch between **otto-brand-voice-score** and **otto-claim-accuracy-score**. You should see two different signals — Otto might be sounding right (high brand-voice) while still inventing facts (lower claim-accuracy), or vice versa.
+In the **Otto Assistant** → **Monitoring** view, compare the **$ld:ai:judge:otto-brand-voice-judge** and **$ld:ai:judge:otto-claim-accuracy-judge** chart cards. You should see two different signals — Otto might be sounding right (high brand-voice) while still inventing facts (lower claim-accuracy), or vice versa.
 
 That decoupling is the whole point. One signal isn't enough; one workshop's worth of catalog isn't going to invent itself.
 
-Click **Check** when the second judge is live and `server.py` invokes both.
+Click **Check** when the second judge is live, attached to Otto, and `server.py` invokes both.

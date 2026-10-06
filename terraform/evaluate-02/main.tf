@@ -1,72 +1,91 @@
 # End-state for Evaluate Challenge 02 — "Quick Takes".
 #
 # Attaches the three built-in judges (Accuracy, Relevance, Toxicity) to the
-# otto-born variation at a 25% sampling rate each. The judges then grade
-# 25% of incoming Otto responses automatically; scores appear in the
-# monitoring view's evaluator metrics dropdown.
+# otto-born variation at a 25% sampling rate each.
 #
-# The literal judgeConfigKey value for each built-in isn't published in
-# the LD docs, so this module discovers the keys at apply-time by listing
-# the project's judge-mode configs and matching on the well-known metric
-# keys ($ld:ai:judge:accuracy, $ld:ai:judge:relevance, $ld:ai:judge:toxicity).
-# Built-in judges appear to be auto-provisioned in every project when
-# AgentControl is enabled.
+# How built-in judges actually work (verified 2026-10-06 by capturing the
+# web app's traffic while clicking "+ Add judges"):
 #
-# VERIFY: confirm the listing approach works against a freshly-bootstrapped
-# project. If built-ins aren't surfaced via the configs listing, fall back
-# to literal config keys (operator's click-through reveals the actual keys
-# from the UI's URL bar).
+#   * Built-ins are NOT pre-provisioned in a project. The picker lists them
+#     from an account-level template; the moment you click "Add N judges"
+#     the UI POSTs each one to /api/v2/projects/{key}/ai-configs as a normal
+#     judge-mode config (keys `accuracy`, `relevance`, `toxicity`, each with
+#     a `default` variation on Bedrock Sonnet 4.5 and
+#     evaluationMetricKey `$ld:ai:judge:<key>`). The captured bodies live in
+#     ./builtin-judges/*.json and are replayed verbatim here.
+#   * The auto-created judge configs come up enabled in every environment
+#     with fallthrough -> Default, so nothing else is needed to "turn them on".
+#   * Attaching = PATCH the variation with
+#       {"judgeConfiguration":{"judges":[{"judgeConfigKey":"accuracy","samplingRate":0.25},...]}}
+#     using the SHORT key, not the $ld:ai:judge:* event key.
+#   * GET .../variations/{key} returns a versions list ({items:[...]}), so
+#     anything reading judgeConfiguration back must take the max version.
 
 locals {
-  api_base = "https://app.launchdarkly.com/api/v2"
-
+  api_base      = "https://app.launchdarkly.com/api/v2"
   sampling_rate = 0.25
+  judge_keys    = ["accuracy", "relevance", "toxicity"]
 }
 
-resource "null_resource" "attach_built_in_judges" {
+# Materialize the built-in judge configs in the project (idempotent: a 409
+# from an existing key is swallowed).
+resource "null_resource" "create_built_in_judges" {
   triggers = {
-    config    = "otto-assistant"
-    variation = "otto-born"
-    rate      = local.sampling_rate
+    templates = sha256(join("", [for k in local.judge_keys : file("${path.module}/builtin-judges/${k}.json")]))
   }
 
   provisioner "local-exec" {
     command = <<-EOT
       set -e
+      for k in ${join(" ", local.judge_keys)}; do
+        # A duplicate POST returns 400 (not 409), so probe first.
+        EXISTS=$(curl -sS -o /dev/null -w '%%{http_code}' \
+          '${local.api_base}/projects/${var.project_key}/ai-configs/'$k \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+          -H 'LD-API-Version: beta')
+        if [ "$EXISTS" = "200" ]; then
+          echo "Built-in judge '$k' already exists."
+          continue
+        fi
+        curl -fsS -X POST \
+          '${local.api_base}/projects/${var.project_key}/ai-configs' \
+          -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
+          -H 'Content-Type: application/json' \
+          -H 'LD-API-Version: beta' \
+          --data-binary @'${path.module}/builtin-judges/'$k'.json' \
+          > /dev/null
+        echo "Created built-in judge '$k'."
+      done
+    EOT
+  }
+}
 
-      ALL=$(curl -fsS -X GET \
-        '${local.api_base}/projects/${var.project_key}/ai-configs?limit=100' \
-        -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
-        -H 'LD-API-Version: beta')
+resource "null_resource" "attach_built_in_judges" {
+  depends_on = [null_resource.create_built_in_judges]
 
-      ACCURACY_KEY=$(echo "$ALL" | jq -r '.items[]? | select(.mode == "judge" and .evaluationMetricKey == "$ld:ai:judge:accuracy") | .key' | head -n 1)
-      RELEVANCE_KEY=$(echo "$ALL" | jq -r '.items[]? | select(.mode == "judge" and .evaluationMetricKey == "$ld:ai:judge:relevance") | .key' | head -n 1)
-      TOXICITY_KEY=$(echo "$ALL" | jq -r '.items[]? | select(.mode == "judge" and .evaluationMetricKey == "$ld:ai:judge:toxicity") | .key' | head -n 1)
+  triggers = {
+    config    = "otto-assistant"
+    variation = "otto-born"
+    rate      = local.sampling_rate
+    judges    = join(",", local.judge_keys)
+  }
 
-      if [ -z "$ACCURACY_KEY" ] || [ -z "$RELEVANCE_KEY" ] || [ -z "$TOXICITY_KEY" ]; then
-        echo "Could not locate one or more built-in judges in this project."
-        echo "Found: accuracy=$ACCURACY_KEY relevance=$RELEVANCE_KEY toxicity=$TOXICITY_KEY"
-        echo "All judge-mode configs in this project:"
-        echo "$ALL" | jq '.items[]? | select(.mode == "judge") | {key, name, evaluationMetricKey}'
-        exit 1
-      fi
-
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -e
       curl -fsS -X PATCH \
         '${local.api_base}/projects/${var.project_key}/ai-configs/otto-assistant/variations/otto-born' \
         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
         -H 'Content-Type: application/json' \
         -H 'LD-API-Version: beta' \
-        --data-raw "$(jq -n \
-          --arg a "$ACCURACY_KEY" \
-          --arg r "$RELEVANCE_KEY" \
-          --arg t "$TOXICITY_KEY" \
-          --argjson rate ${local.sampling_rate} \
+        --data-raw "$(jq -n --argjson rate ${local.sampling_rate} \
           '{judgeConfiguration: {judges: [
-            {judgeConfigKey: $a, samplingRate: $rate},
-            {judgeConfigKey: $r, samplingRate: $rate},
-            {judgeConfigKey: $t, samplingRate: $rate}
+            {judgeConfigKey: "accuracy",  samplingRate: $rate},
+            {judgeConfigKey: "relevance", samplingRate: $rate},
+            {judgeConfigKey: "toxicity",  samplingRate: $rate}
           ]}}')" \
         > /dev/null
+      echo "Attached accuracy/relevance/toxicity to otto-born at ${local.sampling_rate}."
     EOT
   }
 }
