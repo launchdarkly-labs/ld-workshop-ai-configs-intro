@@ -29,13 +29,27 @@ resource "null_resource" "set_fallthrough_to_formal" {
         exit 1
       fi
 
-      curl -fsS -X PATCH \
+      # Right after a guarded rollout ends (auto-revert or Stop release) the
+      # targeting PATCH can briefly return HTTP 500 while LD finalizes the
+      # release (seen live 2026-10-06; the same call succeeded ~30s later).
+      # Retry a few times before giving up.
+      ATTEMPT=1
+      until curl -fsS -X PATCH \
         'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/otto-assistant/targeting' \
         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
         -H 'Content-Type: application/json; domain-model=launchdarkly.semanticpatch' \
         --data-raw "$(jq -n --arg v "$FORMAL_ID" \
           '{environmentKey:"test", instructions:[{kind:"updateFallthroughVariationOrRollout", variationId:$v}]}')" \
-        > /dev/null
+        > /dev/null; do
+        if [ "$ATTEMPT" -ge 8 ]; then
+          echo "Giving up setting the fallthrough to otto-formal after $ATTEMPT attempts."
+          exit 1
+        fi
+        echo "Fallthrough PATCH failed (attempt $ATTEMPT); retrying in 10s..."
+        ATTEMPT=$((ATTEMPT + 1))
+        sleep 10
+      done
+      echo "Fallthrough now serves otto-formal."
     EOT
   }
 }
