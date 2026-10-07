@@ -7,11 +7,11 @@ CONFIG=$(curl -s -X GET \
 
 PREMIUM_MODEL=$(echo "$CONFIG" | sed 's/\\/\\\\/g' | jq -r '.variations[]? | select(.key=="otto-premium") | .modelConfigKey // ""')
 if [ -z "$PREMIUM_MODEL" ]; then
-  fail-message "The premium variation hasn't been added yet. Create a new variation named **Otto (Premium)** with key **otto-premium**."
+  fail-message "The premium variation hasn't been added yet. Create a new variation named Otto (Premium) with key otto-premium."
   exit 1
 fi
 if [ "$PREMIUM_MODEL" != "Bedrock.anthropic.claude-sonnet-4-6" ]; then
-  fail-message "The premium variation isn't using Claude Sonnet 4.6. Pick **Anthropic Claude Sonnet 4.6** as the model."
+  fail-message "The premium variation isn't using Claude Sonnet 4.6. Pick Anthropic Claude Sonnet 4.6 as the model."
   exit 1
 fi
 
@@ -38,7 +38,7 @@ PREMIUM_RULE=$(echo "$TARGETING" | jq -r '
 ' | head -1)
 
 if [ -z "$PREMIUM_RULE" ]; then
-  fail-message "No targeting rule for **premium** users found. On the **Targeting** tab, add a rule like: \`user.tier is one of premium\` → **Otto (Premium)**."
+  fail-message "No targeting rule for premium users found. On the Targeting tab, add a rule like: user.tier is one of premium → Otto (Premium)."
   exit 1
 fi
 
@@ -51,7 +51,7 @@ fi
 # ')
 # RULE_VAR_ID=$(echo "$TARGETING" | sed 's/\\/\\\\/g' | jq -r --argjson idx "$RULE_VAR_IDX" '.variations[$idx]._id')
 # if [ "$RULE_VAR_ID" != "$PREMIUM_VAR_ID" ]; then
-#   fail-message "The premium targeting rule is serving the wrong variation. Make sure it routes to **Otto (Premium)**."
+#   fail-message "The premium targeting rule is serving the wrong variation. Make sure it routes to Otto (Premium)."
 #   exit 1
 # fi
 

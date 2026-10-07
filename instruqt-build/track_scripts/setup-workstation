@@ -7,6 +7,21 @@ until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
     sleep 1
 done
 
+REPO=/opt/ld/ai-configs-intro
+REPO_URL="https://github.com/launchdarkly-labs/ld-workshop-ai-configs-intro.git"
+REPO_REF="${REPO_REF:-main}"
+
+# 0. Sync the baked repo clone to the current commit (see DECISIONS.md,
+#    2026-10-06). Tracked files only; app/.env is gitignored.
+echo "Syncing ${REPO} to ${REPO_REF}"
+if git -C "${REPO}" remote set-url origin "${REPO_URL}" \
+   && git -C "${REPO}" fetch --depth 1 origin "${REPO_REF}" \
+   && git -C "${REPO}" reset --hard FETCH_HEAD; then
+    echo "Repo at $(git -C "${REPO}" rev-parse --short HEAD)"
+else
+    echo "WARNING: could not sync ${REPO}; continuing with the baked copy at $(git -C "${REPO}" rev-parse --short HEAD)"
+fi
+
 cd /opt/ld/terraform-ld-student
 echo "sandbox_id = \"${_SANDBOX_ID}\"" > terraform.tfvars
 terraform apply -auto-approve
@@ -30,21 +45,28 @@ echo "export LD_SDK_KEY=${LD_SDK_KEY}" >> ~/.bashrc
 
 # Mint a scoped API token restricted to this project only. The operator's
 # LAUNCHDARKLY_ACCESS_TOKEN stays out of the participant's env; this
-# per-lab token lives in .env for app-side REST calls (future built-in
-# judge discovery in Evaluate ch02, adaptive-switching flips in ch08).
-# Blast radius is bounded by the project scope; the project is destroyed
-# at cleanup.
-LD_API_TOKEN=$(curl -fsS -X POST \
-  "https://app.launchdarkly.com/api/v2/tokens" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  --data-raw "$(jq -n \
-    --arg name "Lab token: ${LD_PROJECT_KEY}" \
-    --arg proj "${LD_PROJECT_KEY}" \
-    '{name: $name, inlineRole: [{effect: "allow", actions: ["*"], resources: [("proj/" + $proj), ("proj/" + $proj + ":*")]}]}')" \
-  | jq -r .token)
+# per-lab token lives in .env for app-side REST calls. Blast radius is
+# bounded by the project scope; the project is destroyed at cleanup. The
+# bootstrap creates a `<project>-admin` custom role; the operator token may
+# only mint tokens from custom roles (an inline role returns 403).
+CUSTOM_ROLE_ID=$(curl -s https://app.launchdarkly.com/api/v2/roles/${LD_PROJECT_KEY}-admin \
+     -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
+     -H "Content-Type: application/json" | jq -r '._id')
 
-APP_ENV=/opt/ld/ai-configs-intro/app/.env
+export LD_API_TOKEN=$(curl -fsS -X POST https://app.launchdarkly.com/api/v2/tokens \
+     -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
+     -H "Content-Type: application/json" \
+     -d '{
+  "name": "Lab token: '${LD_PROJECT_KEY}'",
+  "customRoleIds": [
+    "'${CUSTOM_ROLE_ID}'"
+  ],
+  "serviceToken": true
+}' | jq -r '.token')
+echo "export LD_API_TOKEN=${LD_API_TOKEN}" >> ~/.profile
+echo "export LD_API_TOKEN=${LD_API_TOKEN}" >> ~/.bashrc
+
+APP_ENV="${REPO}/app/.env"
 sed -i 's|^LD_SDK_KEY=.*|LD_SDK_KEY='"${LD_SDK_KEY}"'|g' "$APP_ENV"
 sed -i 's|^LD_CLIENT_KEY=.*|LD_CLIENT_KEY='"${LD_CLIENT_KEY}"'|g' "$APP_ENV"
 sed -i 's|^LD_PROJECT_KEY=.*|LD_PROJECT_KEY='"${LD_PROJECT_KEY}"'|g' "$APP_ENV"

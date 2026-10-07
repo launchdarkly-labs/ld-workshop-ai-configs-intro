@@ -8,7 +8,7 @@ VARIATION=$(curl -s -X GET \
 SYSTEM_PROMPT=$(echo "$VARIATION" | sed 's/\\/\\\\/g' | jq -r '.items[0].messages[]? | select(.role=="system") | .content')
 
 if [ -z "$SYSTEM_PROMPT" ] || [ "$SYSTEM_PROMPT" = "null" ]; then
-  fail-message "Otto's variation has no system message. Open the **Otto (Born)** variation and update its system message."
+  fail-message "Otto's variation has no system message. Open the Otto (Born) variation and update its system message."
   exit 1
 fi
 
@@ -27,7 +27,7 @@ for word in warm helpful playful brief concise honest; do
 done
 
 if [ "$KEYWORDS" -lt 2 ]; then
-  fail-message "Otto's new prompt should describe his personality. Use words like **warm**, **helpful**, **playful**, or **concise** so the model knows who Otto is."
+  fail-message "Otto's new prompt should describe his personality. Use words like warm, helpful, playful, or concise so the model knows who Otto is."
   exit 1
 fi
 
