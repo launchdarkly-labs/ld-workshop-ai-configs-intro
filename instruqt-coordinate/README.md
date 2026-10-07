@@ -1,6 +1,6 @@
 # Track 3 — Coordinate (L3)
 
-Authored 2026-10-07 (Phases 2–10 of `../PHASES-coordinate.md`); awaiting its first live Instruqt run. See `../OPERATOR-CHECKLIST-coordinate.md` for what still needs clicking through.
+Authored and live-tested 2026-10-07 (Phases 2–10 of `../PHASES-coordinate.md`): participant pass ch01–ch11 green, solve scripts exercised via Skip. `../OPERATOR-CHECKLIST-coordinate.md` records what was verified and the handful of items left for the operator.
 
 Otto's character survives: he becomes the brand-voice rewriter inside a team called the **Concierge**.
 

@@ -2,7 +2,7 @@
 
 Build sequence for **Track 3 / Coordinate** (`instruqt-coordinate/`), the third of the workshop's three sibling tracks. Mirrors the structure of `PHASES-evaluate.md`: phases group related challenges, Claude Code works one phase at a time, operator review gates each phase boundary.
 
-> **Status (2026-10-07):** Phase 0's live-fire spike was run by Claude Code against the `kevinc-instruqt` sandbox (two agent Configs, a one-edge graph, SDK traversal, snippet + variable expansion in agent instructions — all confirmed). Phases 1–10 are authored; the track awaits its first live Instruqt run. Open UI-verification items live in `OPERATOR-CHECKLIST-coordinate.md`. Two scope changes are recorded in DECISIONS.md: the dispatch follows edges explicitly rather than calling `reverse_traverse`, and ch09 uses a synthetic traffic generator.
+> **Status (2026-10-07, evening):** Phases 0–10 are done and the track has been through three live Instruqt runs: a full participant pass (ch01–ch11 green) and skip passes exercising every solve script. The welcome challenge was dropped to match Build and Evaluate (11 challenges). Fixes made during the runs, and the few items still open for the operator, are in `OPERATOR-CHECKLIST-coordinate.md`; design changes (lab-token minting, no Mustache placeholders in agent tasks, explicit edge traversal, synthetic rollout traffic) are in DECISIONS.md.
 
 Coordinate starts where Evaluate ends — Otto is built, judged, experimented on, and guarded. Now he becomes part of a team. The track introduces the **Concierge**: a multi-agent system where a triage agent routes customers to specialists (product, sizing, orders), each specialist responds, and Otto polishes the final response for brand voice.
 
