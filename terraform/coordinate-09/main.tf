@@ -33,11 +33,7 @@ resource "launchdarkly_ai_config_variation" "otto_rewriter_lite" {
     - Keep it short. Two or three sentences is usually right.
     - Reply with only the rewritten response — no preamble, no quotation marks, no notes.
 
-    Customer's question:
-    {{question}}
-
-    Specialist's draft:
-    {{draft}}
+    The message you receive contains the customer's question followed by the specialist's draft. Rewrite the draft; don't answer the question from scratch.
   TXT
   )
 }

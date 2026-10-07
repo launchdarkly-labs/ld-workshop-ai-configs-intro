@@ -13,8 +13,9 @@
 # This is Otto's payoff across three tracks: the SAME `brand-voice` snippet
 # drives his original prompt (Build ch03), the brand-voice judge (Evaluate
 # ch03), and now his rewriter instructions. One source of truth for "on-brand".
-# {{question}} and {{draft}} are filled per request by the server via
-# `agent_config(..., variables=...)` during graph dispatch (ch07).
+# No request-time placeholders here: the SDK renders the agent task as a
+# Mustache template with no variables, so {{anything}} of ours would come
+# back empty. The server sends the question + draft in the user turn (ch07).
 locals {
   instructions = trimspace(<<-TXT
     {{snippet.brand-voice#1}}
@@ -26,11 +27,7 @@ locals {
         - Keep it short. Two or three sentences is usually right.
         - Reply with only the rewritten response — no preamble, no quotation marks, no notes.
 
-        Customer's question:
-        {{question}}
-
-        Specialist's draft:
-        {{draft}}
+        The message you receive contains the customer's question followed by the specialist's draft. Rewrite the draft; don't answer the question from scratch.
   TXT
   )
 }

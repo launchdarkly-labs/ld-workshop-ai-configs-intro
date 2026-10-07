@@ -466,9 +466,13 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 
 **Why:** verified live in the sandbox on 2026-10-07: the provider accepts agent mode and `instructions`; the REST endpoint returns the graph with `rootConfigKey` and `edges[{key,sourceConfig,targetConfig,handoff}]`; the SDK evaluates it immediately with no extra targeting step.
 
-## Otto's rewriter fills `{{question}}`/`{{draft}}` by string substitution; snippets expand server-side (2026-10-07)
+## Otto's rewriter receives the question and draft in the user turn, not via placeholders (2026-10-07, revised after the first live run)
 
-**Decision:** the rewriter's instructions mix a snippet reference (`{{snippet.brand-voice#1}}`) with two request-time placeholders. LaunchDarkly expands the snippet before the SDK sees the instructions (verified: the SDK returns the snippet text). The server fills the placeholders itself with `str.replace` because, in SDK 0.20.1, graph-evaluated node Configs come pre-resolved and `agent_config(..., variables=...)` would re-evaluate the node outside the graph (losing the `graphKey` tag).
+**Decision:** the rewriter's agent task carries the brand-voice snippet reference plus static rewriting rules; the customer's question and the specialist's draft are sent as the user message (`Customer's question: … / Specialist's draft: …`). No `{{question}}`/`{{draft}}` placeholders anywhere.
+
+**Rationale:** the first live run returned "I don't see the customer's question or the specialist's draft" from the rewriter. In `launchdarkly-server-sdk-ai` 0.20.1, `agent_graph()` evaluates every node through the same path as `agent_config()` and renders `instructions` with `chevron.render(template, variables)`; `agent_graph()` has no `variables` parameter and `AgentGraphNode.get_config()` cannot re-render, so Mustache renders unknown tags as empty strings before the server ever sees the text. The earlier plan (server-side `str.replace`) was wrong. Snippet references still expand (verified again live).
+
+**Teaching value:** ch05 and ch07 now say it plainly: an agent task is a Mustache template rendered by the SDK, so per-request data belongs in the user turn.
 
 ## Coordinate ch09 uses a synthetic traffic generator biased by served model (2026-10-07)
 

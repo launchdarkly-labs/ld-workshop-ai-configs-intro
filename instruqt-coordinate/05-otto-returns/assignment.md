@@ -52,7 +52,7 @@ Concierge Otto Rewriter
 
 # Write the rewriter's instructions
 
-The instructions use two placeholders, `{{question}}` and `{{draft}}`. The server fills them in per request in Challenge 07. Keep them exactly as written.
+The rewriter gets the customer's question and the specialist's draft in the message it receives, not in its agent task. Anything in double braces in an agent task is a Mustache tag that LaunchDarkly renders before the SDK hands the text over, so an agent task is no place for per-request data.
 
 1. Name the variation `Default`.
 2. **Select model** → **Bedrock** → search `haiku-4-5-20251001` → select **us.anthropic.claude-haiku-4-5-20251001-v1:0**.
@@ -66,11 +66,7 @@ Rules:
 - Keep it short. Two or three sentences is usually right.
 - Reply with only the rewritten response — no preamble, no quotation marks, no notes.
 
-Customer's question:
-{{question}}
-
-Specialist's draft:
-{{draft}}
+The message you receive contains the customer's question followed by the specialist's draft. Rewrite the draft; don't answer the question from scratch.
 ```
 5. Click **Review and save**, then **Save changes**.
 
@@ -85,4 +81,4 @@ A config's first saved variation is served automatically: the config is switched
 
 Open **Configs** and look at **Otto Assistant** next to **Concierge Otto Rewriter**. Same voice, same snippet, different modes. Otto Assistant keeps serving the ToggleWear app exactly as before until Challenge 07 switches the app over to the graph. Nothing about him changes; the team is built around him.
 
-Click **Check** when the rewriter exists in agent mode, loads the brand-voice snippet, keeps both placeholders, and serves Default in Test.
+Click **Check** when the rewriter exists in agent mode, loads the brand-voice snippet, tells Otto to rewrite the draft, and serves Default in Test.

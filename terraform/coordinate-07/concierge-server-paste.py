@@ -17,21 +17,21 @@
         })
     graph_tracker = graph.create_tracker()
 
-    def call_node(node, user_text: str, variables: Optional[dict] = None) -> dict:
+    def call_node(node, user_text: str) -> dict:
         """Run one graph node: evaluate its agent Config, call its model on Bedrock.
 
         Agent-mode Configs give us `instructions` (one string) instead of a
         messages array. Snippets like {{snippet.brand-voice#1}} are already
-        expanded by LaunchDarkly; our own {{variables}} are filled in here.
-        The node's tracker is tagged with the graph key, so every metric
-        rolls up to the Concierge graph in Monitoring.
+        expanded by LaunchDarkly, and so is every other {{mustache}} tag: the
+        SDK renders the agent task with no variables, so per-request data
+        travels in the user turn, never in the agent task. The node's tracker
+        is tagged with the graph key, so every metric rolls up to the
+        Concierge graph in Monitoring.
         """
         agent = node.get_config()
         if not agent.enabled or agent.model is None:
             raise RuntimeError(f"agent {node.get_key()} is disabled")
         instructions = agent.instructions or ""
-        for name, value in (variables or {}).items():
-            instructions = instructions.replace("{{" + name + "}}", value)
         node_model_id = resolve_bedrock_model(agent.model.name)
         node_tracker = agent.create_tracker()
         node_resp = node_tracker.track_bedrock_converse_metrics(
@@ -73,11 +73,10 @@
         rewriter = graph.get_node(out_edges[0].target_config) if out_edges else None
         if rewriter is None:
             raise RuntimeError(f"{specialist.get_key()} has no outgoing edge to a rewriter")
-        rewrite = call_node(
-            rewriter,
-            "Rewrite the specialist's draft in your voice now.",
-            variables={"question": req.message, "draft": draft["text"]},
+        rewrite_user_text = (
+            f"Customer's question:\n{req.message}\n\nSpecialist's draft:\n{draft['text']}"
         )
+        rewrite = call_node(rewriter, rewrite_user_text)
         assistant_text = rewrite["text"]
         model_id = rewrite["model_id"]
         tracker = rewrite["tracker"]  # the Evaluate-era judge blocks below record against this

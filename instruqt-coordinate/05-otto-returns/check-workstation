@@ -18,15 +18,11 @@ if [ -z "$INSTRUCTIONS" ]; then
   exit 1
 fi
 if ! printf '%s' "$INSTRUCTIONS" | grep -qi 'snippet.brand-voice'; then
-  fail-message "Concierge Otto Rewriter's instructions don't mention 'snippet.brand-voice' yet. Clear the Instructions box, click Load snippet and choose Brand voice, then paste Otto's rewriter instructions (they must keep the {{question}} and {{draft}} placeholders) and Review and save."
+  fail-message "Concierge Otto Rewriter's instructions don't mention 'snippet.brand-voice' yet. Clear the Instructions box, click Load snippet and choose Brand voice, then paste Otto's rewriter instructions and Review and save."
   exit 1
 fi
-if ! printf '%s' "$INSTRUCTIONS" | grep -qi '{{draft}}'; then
-  fail-message "Concierge Otto Rewriter's instructions don't mention '{{draft}}' yet. Clear the Instructions box, click Load snippet and choose Brand voice, then paste Otto's rewriter instructions (they must keep the {{question}} and {{draft}} placeholders) and Review and save."
-  exit 1
-fi
-if ! printf '%s' "$INSTRUCTIONS" | grep -qi '{{question}}'; then
-  fail-message "Concierge Otto Rewriter's instructions don't mention '{{question}}' yet. Clear the Instructions box, click Load snippet and choose Brand voice, then paste Otto's rewriter instructions (they must keep the {{question}} and {{draft}} placeholders) and Review and save."
+if ! printf '%s' "$INSTRUCTIONS" | grep -qi "specialist's draft"; then
+  fail-message "Concierge Otto Rewriter's agent task doesn't mention the specialist's draft yet. Clear the Agent task box, click Load snippet and choose Brand voice, then paste Otto's rewriter instructions from the lab and Review and save."
   exit 1
 fi
 TARGETING=$(curl -s -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/concierge-otto-rewriter/targeting" \

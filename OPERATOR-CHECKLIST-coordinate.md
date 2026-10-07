@@ -31,7 +31,7 @@ Authored 2026-10-07 in one pass (Phases 2–10 of PHASES-coordinate.md). Everyth
 - [ ] Checks grep the latest variation's `instructions` for the snippet reference (02) and role words (03: "Tailor", "size"; 04: "Tracker", "order").
 
 ### 05 Otto returns
-- [ ] Instructions keep `{{question}}` and `{{draft}}` verbatim; check requires both.
+- [ ] Agent task ends with the "message you receive contains the customer's question followed by the specialist's draft" sentence; check greps for "specialist's draft".
 
 ### 06 Build the graph
 - [ ] Agents → **Graphs** → **Create new graph**; name "Concierge" → key `concierge`.

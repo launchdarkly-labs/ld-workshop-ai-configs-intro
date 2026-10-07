@@ -92,7 +92,7 @@ Open the [Code Editor](#tab-2) tab and open `app/server.py`.
             healed = bedrock.converse(
                 modelId=SELF_HEAL_FALLBACK_MODEL,
                 system=[{"text": rewrite["instructions"]}],
-                messages=[{"role": "user", "content": [{"text": "Rewrite the specialist's draft in your voice now."}]}],
+                messages=[{"role": "user", "content": [{"text": rewrite_user_text}]}],
                 inferenceConfig={"maxTokens": 400, "temperature": 0.4},
             )
             healed_text = _extract_text(healed).strip()
