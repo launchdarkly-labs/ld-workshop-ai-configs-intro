@@ -136,6 +136,12 @@ Full click-through completed 2026-10-06 (start → stop/roll back). Assignment, 
 - [ ] Confirm the LD UI Targeting view updates within a few seconds of the REST PATCH firing.
 - [ ] Capture screenshots of: server.py with adaptive_observe paste, journalctl log showing the flip event, Targeting view before and after the flip.
 
+### 08 Otto knows when to fold — adaptive trigger (added 2026-10-07)
+- [x] UI verified from an admin account: **Add adaptive trigger** under the Default rule → **Custom trigger** → Source **LaunchDarkly hosted metrics** / **Select a metric** (search `Otto Brand`) → **Below** `0.5` over **1 minute** → **Switch variation to Otto (Born)** → **Add**. Fired 2–4 minutes after Otto was put on Formal, twice. Cooldown defaults to 30 minutes, which is what lets the in-app loop take the second flip.
+- [ ] **Lab role permissions.** The learner's custom role needs `createTriggers`/`updateTriggers`/`deleteTriggers` plus `createAlert`/`updateAlertConfiguration`/`deleteAlert` (LD docs). The operator reports this is fixed on the image; confirm once from the Instruqt LaunchDarkly tab (the automated run used an admin session).
+- [x] The first **Add adaptive trigger** button on the page belongs to Rule 1 (the premium rule); the assignment says "under the Default rule card (not under Rule 1)".
+- [x] Solve/check unchanged: the trigger's alert is created through an observability API that is not in the public REST surface, so the solve installs the in-app loop and the check requires the loop plus the Born fallthrough. A learner who skips sees no trigger on the card.
+
 ### 09 Wrap-up
 
 - [ ] Read through the recap; confirm it accurately reflects what the learner just did.
