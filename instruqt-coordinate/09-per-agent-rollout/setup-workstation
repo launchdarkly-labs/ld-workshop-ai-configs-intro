@@ -3,10 +3,21 @@
 # configures the guarded rollout in the UI) and start background traffic that
 # the rollout can judge.
 set -e
-cd /opt/ld/ai-configs-intro/terraform/coordinate-09
-echo "project_key = \"${LD_PROJECT_KEY}\"" > terraform.tfvars
-terraform init -input=false
-terraform apply -auto-approve
+API="https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+# Create the Lite variation only if it isn't there yet. A second `terraform
+# apply` against an existing variation is what the provider (2.30.x) handles
+# badly: it waits for a version bump that a no-op PATCH never produces.
+LITE_EXISTS=$(curl -s -X GET "${API}/ai-configs/concierge-otto-rewriter" -H "$AUTH" -H 'LD-API-Version: beta' \
+  | jq -r '[.variations[]? | select(.key=="otto-rewriter-lite")] | length')
+if [ "${LITE_EXISTS:-0}" = "0" ]; then
+  cd /opt/ld/ai-configs-intro/terraform/coordinate-09
+  echo "project_key = \"${LD_PROJECT_KEY}\"" > terraform.tfvars
+  terraform init -input=false
+  terraform apply -auto-approve
+else
+  echo "Otto Rewriter (Lite) already exists; skipping terraform."
+fi
 
 pkill -f realchat_traffic.py 2>/dev/null || true
 pkill -f background_traffic.py 2>/dev/null || true

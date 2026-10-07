@@ -47,7 +47,6 @@ resource "launchdarkly_ai_config_variation" "concierge_otto_rewriter" {
   key              = "default"
   name             = "Default"
   model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
-  description      = "Brand-voice rewriter. Otto rewrites every specialist draft in his own voice before it reaches the customer."
   instructions     = local.instructions
 }
 

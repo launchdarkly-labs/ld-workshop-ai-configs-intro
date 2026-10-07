@@ -38,7 +38,6 @@ resource "launchdarkly_ai_config_variation" "concierge_tailor" {
   key              = "default"
   name             = "Default"
   model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
-  description      = "Sizing specialist. Handles fit and measurement questions honestly."
   instructions     = local.instructions
 }
 

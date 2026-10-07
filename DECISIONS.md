@@ -496,3 +496,9 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 **Alternatives considered:**
 - *Keep the welcome and debug the CLI.* Rejected: diverges from the sibling tracks and the CLI behaviour had no visible cause.
 - *Fall back to `inlineRole` on 403.* Rejected: the custom-role path already exists and is proven in two tracks.
+
+## Variation resources carry no `description`; ch09 guards its Terraform apply (2026-10-07, after the skip run)
+
+**Decision:** drop the `description` attribute from every `launchdarkly_ai_config_variation` in `terraform/coordinate-*`, and make ch09's setup/solve apply `terraform/coordinate-09` only when `otto-rewriter-lite` does not exist yet.
+
+**Rationale:** the skip run showed the provider (2.30.x) creating the Lite variation fine on the first apply, then failing every later apply with `waiting for variation version to advance past 1`: the API does not persist a variation description, so the provider plans `+ description` forever and its PATCH never bumps the version it polls for. ch09's solve runs after its setup, so the second apply always hit this; `set -e` then skipped the traffic generator and the guarded-rollout REST call. The config-level `description` (what the UI and graph cards show) is untouched.

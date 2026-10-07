@@ -39,7 +39,6 @@ resource "launchdarkly_ai_config_variation" "concierge_toggle" {
   key              = "default"
   name             = "Default"
   model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
-  description      = "Triage. Reads the customer's message and names the specialist who should handle it."
   instructions     = local.instructions
 }
 

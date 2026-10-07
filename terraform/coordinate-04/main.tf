@@ -38,7 +38,6 @@ resource "launchdarkly_ai_config_variation" "concierge_tracker" {
   key              = "default"
   name             = "Default"
   model_config_key = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
-  description      = "Order-status specialist. Handles orders, shipping, and returns without inventing data."
   instructions     = local.instructions
 }
 

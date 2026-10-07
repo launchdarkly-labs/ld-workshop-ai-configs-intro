@@ -22,7 +22,6 @@ resource "launchdarkly_ai_config_variation" "otto_rewriter_lite" {
   key              = "otto-rewriter-lite"
   name             = "Otto Rewriter (Lite)"
   model_config_key = "Bedrock.amazon.nova-lite-v1:0"
-  description      = "Brand-voice rewriter on Amazon Nova Lite — cheaper, and the model the guarded rollout puts on trial."
   instructions = trimspace(<<-TXT
     {{snippet.brand-voice#1}}
 
