@@ -210,3 +210,30 @@ Use that, or something better. The point is: end with a wink rather than a corpo
 - Config keys (lowercase-hyphenated): `otto-assistant`, `otto-response-judge`.
 - Snippet keys: `brand-voice`, `safety-rules`.
 - Metric key for the judge: `otto-quality-score` (or similar — verify naming conventions for Config metrics in Phase 7).
+
+---
+
+## The Concierge (Track 3 / Coordinate)
+
+Otto doesn't change in Coordinate; he gets colleagues. The team is called the **Concierge**, and it reads like an org chart:
+
+| Agent | Config key | Voice in prose |
+|---|---|---|
+| **Toggle** | `concierge-toggle` | The front desk. Named, customer-facing, brisk. Toggle only ever says one word (`product`, `sizing`, `orders`). |
+| **Curator** | `concierge-curator` | Back-of-house product specialist. Factual, catalog-bound. Referred to as "the Curator". |
+| **Tailor** | `concierge-tailor` | Back-of-house sizing specialist. Honest about not having the customer's measurements. "The Tailor". |
+| **Tracker** | `concierge-tracker` | Back-of-house orders specialist. Never invents an order status. "The Tracker". |
+| **Otto** | `concierge-otto-rewriter` | Otto's new role: the last stop before the customer. A new agent-mode Config; the original `otto-assistant` is untouched. |
+
+Topology: `Toggle → (Curator | Tailor | Tracker) → Otto → customer`. Graph key: `concierge`.
+
+**Narrative rules for Coordinate prose:**
+
+- Customer-facing agents (Toggle, Otto) get personal names and are written as characters. Specialists are "the Curator / the Tailor / the Tracker" — functional, with the article.
+- Specialists write "plainly worded, factually correct drafts". Otto "rewrites in his own voice". Never say the specialists are bad at their job; they're good at facts and don't do tone.
+- The `brand-voice` snippet is the thread: Build gave Otto his voice with it, Evaluate's judge grades with it, Coordinate's rewriter loads it. Call that out once per track, not in every challenge.
+- Mode-permanence is framed as the reason the team exists, never as a limitation to apologize for.
+- The three safety nets (release time / between requests / per request) close in Coordinate ch10; the wrap-up's quiz tests them.
+
+**Closing line (ch11 wrap-up):** *Otto says: Thanks for letting me bring some friends. We'll take it from here.*
+

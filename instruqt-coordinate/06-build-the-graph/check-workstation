@@ -1,2 +1,35 @@
 #!/bin/sh
+API="https://app.launchdarkly.com/api/v2"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+
+GRAPH=$(curl -s -X GET "${API}/projects/${LD_PROJECT_KEY}/agent-graphs/concierge" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+if [ "$(printf '%s' "$GRAPH" | jq -r '.key // "null"')" != "concierge" ]; then
+  fail-message "There's no agent graph with key concierge yet. Under Agents, open Graphs, click Create new graph, name it Concierge (key concierge), and click Create."
+  exit 1
+fi
+ROOT=$(printf '%s' "$GRAPH" | jq -r '.rootConfigKey // ""')
+if [ "$ROOT" != "concierge-toggle" ]; then
+  fail-message "The graph's root is '${ROOT:-unset}' but it should be concierge-toggle. Toggle is the agent every customer message starts with; set it as the root node."
+  exit 1
+fi
+has_edge() {
+  printf '%s' "$GRAPH" | jq -e --arg s "$1" --arg t "$2" '.edges[]? | select(.sourceConfig == $s and .targetConfig == $t)' > /dev/null 2>&1
+}
+for spec in concierge-curator concierge-tailor concierge-tracker; do
+  if ! has_edge concierge-toggle "$spec"; then
+    fail-message "The graph is missing the edge concierge-toggle -> ${spec}. Toggle needs one edge to each of the three specialists."
+    exit 1
+  fi
+  if ! has_edge "$spec" concierge-otto-rewriter; then
+    fail-message "The graph is missing the edge ${spec} -> concierge-otto-rewriter. Every specialist hands its draft to Otto."
+    exit 1
+  fi
+done
+for route in product sizing orders; do
+  if ! printf '%s' "$GRAPH" | jq -e --arg r "$route" '.edges[]? | select(.sourceConfig == "concierge-toggle") | select((.handoff.route // "") == $r)' > /dev/null 2>&1; then
+    fail-message "None of Toggle's edges carries handoff {\"route\": \"${route}\"}. Click the + on each Toggle edge and enter the routing JSON from the lab. The server uses that handoff data to pick the specialist."
+    exit 1
+  fi
+done
 exit 0

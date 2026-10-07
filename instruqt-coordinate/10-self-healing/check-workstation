@@ -1,2 +1,29 @@
 #!/bin/sh
+API="https://app.launchdarkly.com/api/v2"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+
+SERVER=/opt/ld/ai-configs-intro/app/server.py
+if ! grep -q 'SELF_HEAL_THRESHOLD' "$SERVER"; then
+  fail-message "server.py doesn't have the self-healing block yet. Paste it from the lab immediately below the 'Coordinate 10: self-healing hook' comment inside the Concierge dispatch, then save."
+  exit 1
+fi
+if ! grep -q 'concierge-self-heal' "$SERVER"; then
+  fail-message "The self-healing block isn't emitting the concierge-self-heal event. Paste the block exactly as written in the lab; the ld_client.track call is what feeds the metric."
+  exit 1
+fi
+if ! python3 -m py_compile "$SERVER" 2>/tmp/compile.err; then
+  fail-message "server.py has a syntax error after the paste: $(head -c 200 /tmp/compile.err). Check the indentation of the pasted block (every line should start with four spaces)."
+  exit 1
+fi
+METRIC=$(curl -s -X GET "${API}/metrics/${LD_PROJECT_KEY}/concierge-self-heal" -H "$AUTH")
+if [ "$(printf '%s' "$METRIC" | jq -r '.key // "null"')" != "concierge-self-heal" ]; then
+  fail-message "The concierge-self-heal metric is missing from your project. Setup should have created it — re-run setup or click Skip."
+  exit 1
+fi
+REPLY=$(curl -s -m 90 -X POST http://localhost:3000/chat -H 'Content-Type: application/json' \
+  --data-raw '{"message":"Do you have the hoodie in a tall size?","user_tier":"free","session_id":"check-10"}')
+if ! printf '%s' "$REPLY" | jq -e '.response | length > 0' > /dev/null 2>&1; then
+  fail-message "The ToggleWear app didn't answer after the paste: $(printf '%s' "$REPLY" | head -c 200). Check the service log with: journalctl -u togglewear -n 50"
+  exit 1
+fi
 exit 0

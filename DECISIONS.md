@@ -452,3 +452,33 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 
 **Consequences:** the model the learner evaluates is the same Claude model Otto runs on, reached through a different API key; the assignment says so in one sentence. Otto's production variations stay on Bedrock. Revert the assignment steps and the two Terraform locals when LaunchDarkly fixes the Bedrock connection.
 
+## Coordinate's dispatch follows edges explicitly instead of using `reverse_traverse` (2026-10-07)
+
+**Decision:** `terraform/coordinate-07/concierge-server-paste.py` evaluates the graph with `ai_client.agent_graph("concierge", context)`, calls the root node, picks the outgoing edge whose `handoff["route"]` matches Toggle's one-word answer, calls that specialist, then follows its single edge to the rewriter. It does not use `traverse`/`reverse_traverse`.
+
+**Why:** both exist in the SDK (0.20.1), but they visit *every* reachable node in depth order. The Concierge visits one specialist per request, chosen at runtime from Toggle's answer, which is exactly the "application controls traversal; handoff data is interpreted by your application logic" model the docs describe. Explicit edge-following shows the learner the wiring (`root()`, `get_edges()`, `handoff`, `get_node()`) with nothing hidden. The scope doc's preference for `reverse_traverse` predates the live spike.
+
+**Consequences:** the assignment names `traverse`/`reverse_traverse` and the framework runners as the production alternatives. Node trackers come from `node.get_config().create_tracker()`, which the SDK tags with `graphKey` automatically because the graph evaluated the node Configs; the graph tracker records one success/failure per request.
+
+## Agent Configs are created with the Terraform provider; the graph with REST (2026-10-07)
+
+**Decision:** `terraform/coordinate-01..05` use `launchdarkly_ai_config` (`mode = "agent"`) and `launchdarkly_ai_config_variation` with `description` + `instructions`, plus the usual `null_resource` fallthrough PATCH. `terraform/coordinate-06` creates the graph through `POST /api/v2/projects/{proj}/agent-graphs` (body in `graph.json`) because provider ~> 2.29 has no agent-graph resource. Create-only: if the graph exists, the solve leaves the learner's version alone and the check validates topology.
+
+**Why:** verified live in the sandbox on 2026-10-07: the provider accepts agent mode and `instructions`; the REST endpoint returns the graph with `rootConfigKey` and `edges[{key,sourceConfig,targetConfig,handoff}]`; the SDK evaluates it immediately with no extra targeting step.
+
+## Otto's rewriter fills `{{question}}`/`{{draft}}` by string substitution; snippets expand server-side (2026-10-07)
+
+**Decision:** the rewriter's instructions mix a snippet reference (`{{snippet.brand-voice#1}}`) with two request-time placeholders. LaunchDarkly expands the snippet before the SDK sees the instructions (verified: the SDK returns the snippet text). The server fills the placeholders itself with `str.replace` because, in SDK 0.20.1, graph-evaluated node Configs come pre-resolved and `agent_config(..., variables=...)` would re-evaluate the node outside the graph (losing the `graphKey` tag).
+
+## Coordinate ch09 uses a synthetic traffic generator biased by served model (2026-10-07)
+
+**Decision:** `traffic-generator/concierge_traffic.py` evaluates `concierge-otto-rewriter` per simulated user and emits `otto-brand-voice-score` from a per-model distribution (Haiku ≈ 0.80, Nova Lite ≈ 0.28), the same approach as Evaluate ch07's `background_traffic.py`.
+
+**Why:** the rollout must fire inside the lab's time budget regardless of how Nova Lite happens to phrase any given rewrite. Real `/chat` traffic (and the real judges) run in every other Coordinate challenge, including ch10 where the self-heal is demonstrated on genuine rewrites.
+
+## Coordinate ch07 replaces the Otto block rather than wrapping it (2026-10-07)
+
+**Decision:** the Concierge paste replaces everything from the `# ─── Challenge 01: wire Otto to /chat` comment to the `# ─── Challenge 07 judge injects below this marker` comment. The Evaluate judge blocks below the marker are kept and now grade the rewriter's output; the paste defines the `assistant_text`, `model_id`, `tracker` and `context` names they rely on.
+
+**Why:** Python has no way to guard the existing block without re-indenting it, and a second Bedrock call to Otto Assistant per request would muddle the lesson (two Ottos answering). A clean replacement with exact anchors is the smallest honest edit; `patch-server.py` does the same replacement for Skip.
+

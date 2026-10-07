@@ -1,2 +1,18 @@
 #!/bin/sh
+# Coordinate ch09 setup: add the Nova Lite rewriter variation (the learner
+# configures the guarded rollout in the UI) and start background traffic that
+# the rollout can judge.
+set -e
+cd /opt/ld/ai-configs-intro/terraform/coordinate-09
+echo "project_key = \"${LD_PROJECT_KEY}\"" > terraform.tfvars
+terraform init -input=false
+terraform apply -auto-approve
+
+pkill -f realchat_traffic.py 2>/dev/null || true
+pkill -f background_traffic.py 2>/dev/null || true
+if ! pgrep -f concierge_traffic.py > /dev/null; then
+  nohup /opt/ld/ai-configs-intro/app/.venv/bin/python3 \
+    /opt/ld/ai-configs-intro/traffic-generator/concierge_traffic.py \
+    > /var/log/togglewear-concierge-traffic.log 2>&1 &
+fi
 exit 0

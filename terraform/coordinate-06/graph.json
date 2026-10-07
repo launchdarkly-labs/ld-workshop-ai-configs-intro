@@ -1,0 +1,56 @@
+{
+  "key": "concierge",
+  "name": "Concierge",
+  "description": "Toggle triages, a specialist answers, Otto rewrites. Toggle -> (Curator | Tailor | Tracker) -> Otto.",
+  "rootConfigKey": "concierge-toggle",
+  "edges": [
+    {
+      "key": "toggle-to-curator",
+      "sourceConfig": "concierge-toggle",
+      "targetConfig": "concierge-curator",
+      "handoff": {
+        "route": "product"
+      }
+    },
+    {
+      "key": "toggle-to-tailor",
+      "sourceConfig": "concierge-toggle",
+      "targetConfig": "concierge-tailor",
+      "handoff": {
+        "route": "sizing"
+      }
+    },
+    {
+      "key": "toggle-to-tracker",
+      "sourceConfig": "concierge-toggle",
+      "targetConfig": "concierge-tracker",
+      "handoff": {
+        "route": "orders"
+      }
+    },
+    {
+      "key": "curator-to-otto",
+      "sourceConfig": "concierge-curator",
+      "targetConfig": "concierge-otto-rewriter",
+      "handoff": {
+        "step": "rewrite"
+      }
+    },
+    {
+      "key": "tailor-to-otto",
+      "sourceConfig": "concierge-tailor",
+      "targetConfig": "concierge-otto-rewriter",
+      "handoff": {
+        "step": "rewrite"
+      }
+    },
+    {
+      "key": "tracker-to-otto",
+      "sourceConfig": "concierge-tracker",
+      "targetConfig": "concierge-otto-rewriter",
+      "handoff": {
+        "step": "rewrite"
+      }
+    }
+  ]
+}

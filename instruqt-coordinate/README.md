@@ -1,31 +1,24 @@
 # Track 3 — Coordinate (L3)
 
-Scope pending — requires a Phase 0 spike to confirm agent-mode + agent-graph surfaces are stable enough to lab against.
+Authored 2026-10-07 (Phases 2–10 of `../PHASES-coordinate.md`); awaiting its first live Instruqt run. See `../OPERATOR-CHECKLIST-coordinate.md` for what still needs clicking through.
 
-Will become a sibling Instruqt track covering the multi-agent surface of AgentControl. Otto's character survives — he becomes the brand-voice rewriter inside a team called the **Concierge**.
+Otto's character survives: he becomes the brand-voice rewriter inside a team called the **Concierge**.
 
-**Cast (see `../DECISIONS.md` and `../NARRATIVE.md` for naming rationale):**
+**Cast (see `../DECISIONS.md` and `../NARRATIVE.md`):** Toggle (triage, root), Curator (products), Tailor (sizing), Tracker (orders), Otto (rewriter). Topology `Toggle → (Curator | Tailor | Tracker) → Otto → customer`; graph key `concierge`.
 
-- **Toggle** — triage agent. Greets the customer, routes to the right specialist.
-- **Curator** — product-knowledge specialist
-- **Tailor** — sizing specialist
-- **Tracker** — order-status specialist
-- **Otto** — brand-voice rewriter. Every response passes through him before reaching the customer.
+| # | Challenge | Terraform / code |
+|---|---|---|
+| 00 | welcome | — |
+| 01 | toggle — first agent-mode Config | `terraform/coordinate-01` |
+| 02 | the-curator | `terraform/coordinate-02` (loads `product-catalog` snippet) |
+| 03 | the-tailor | `terraform/coordinate-03` |
+| 04 | the-tracker | `terraform/coordinate-04` |
+| 05 | otto-returns — rewriter, loads `brand-voice` | `terraform/coordinate-05` |
+| 06 | build-the-graph — UI graph, REST solve | `terraform/coordinate-06` (`graph.json`) |
+| 07 | wire-the-sdk — graph dispatch in `server.py` | `terraform/coordinate-07` (`concierge-server-paste.py`, `patch-server.py`) |
+| 08 | quiz | — |
+| 09 | per-agent-rollout — Nova Lite on the rewriter only | `terraform/coordinate-09`, `traffic-generator/concierge_traffic.py` |
+| 10 | self-healing — synchronous judge + Haiku fallback | `terraform/coordinate-10` (`selfheal-server-paste.py`, `patch-server.py`) |
+| 11 | wrap-up (quiz) | — |
 
-**Topology:** `Toggle → (Curator | Tailor | Tracker) → Otto → customer`
-
-Planned challenges (high-level):
-
-1. Welcome — frame mode-permanence, meet the Concierge team
-2. Build Toggle in agent mode (first agent-mode Config; concretely demonstrates mode-permanence)
-3. Add the Curator (first specialist + first handoff JSON)
-4. Add the Tailor and Tracker
-5. Otto returns as the brand-voice rewriter
-6. Build the graph in the UI (topology + edges)
-7. Wire the SDK (`reverse_traverse` + `graph_key`)
-8. Quiz interstitial
-9. Per-agent guarded rollout on Otto-the-rewriter
-10. Self-healing (synchronous judge + Haiku 4.5 fallback)
-11. Wrap-up
-
-This directory will house `track.yml`, `config.yml`, `track_scripts/`, the per-challenge folders, and `assets/` once scoped.
+Track-level `setup-workstation` syncs the VM clone, bootstraps the project, and materializes the post-Build + post-Evaluate state (Build 01/02/03/05/06, Evaluate 01/02/03/04/07, plus the four server patches).

@@ -1,2 +1,60 @@
 #!/bin/sh
+# Coordinate ch09 solve: make sure the Lite variation exists, then start the
+# guarded rollout on concierge-otto-rewriter (Default -> Lite) watching
+# otto-brand-voice-score. Mirrors Evaluate ch07's solve.
+set -e
+cd /opt/ld/ai-configs-intro/terraform/coordinate-09
+echo "project_key = \"${LD_PROJECT_KEY}\"" > terraform.tfvars
+terraform init -input=false
+terraform apply -auto-approve
+
+pkill -f realchat_traffic.py 2>/dev/null || true
+pkill -f background_traffic.py 2>/dev/null || true
+if ! pgrep -f concierge_traffic.py > /dev/null; then
+  nohup /opt/ld/ai-configs-intro/app/.venv/bin/python3 \
+    /opt/ld/ai-configs-intro/traffic-generator/concierge_traffic.py \
+    > /var/log/togglewear-concierge-traffic.log 2>&1 &
+fi
+
+API="https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+TARGETING=$(curl -fsS -X GET "${API}/ai-configs/concierge-otto-rewriter/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+if printf '%s' "$TARGETING" | jq -e '.environments.test.fallthrough.rollout.experimentAllocation.type == "measuredRollout"' > /dev/null 2>&1; then
+  echo "A guarded rollout is already running on concierge-otto-rewriter."
+  exit 0
+fi
+LITE_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-rewriter-lite") | ._id')
+ORIG_ID=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.variation as $i | if $i == null then empty else .variations[$i]._id end')
+if [ -z "$ORIG_ID" ]; then
+  ORIG_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "default") | ._id')
+fi
+if [ -z "$LITE_ID" ] || [ -z "$ORIG_ID" ]; then
+  echo "Could not resolve the rewriter variation ids — learner can configure the rollout in the UI."
+  exit 0
+fi
+curl -fsS -X PATCH "${API}/ai-configs/concierge-otto-rewriter/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta' \
+  -H 'Content-Type: application/json' \
+  --data-raw "$(jq -n --arg lite "$LITE_ID" --arg orig "$ORIG_ID" '
+    {
+      environmentKey: "test",
+      comment: "Coordinate ch09 solve: guarded rollout of the Lite rewriter",
+      instructions: [{
+        kind: "startAutomatedRelease",
+        releaseKind: "guarded",
+        originalVariationId: $orig,
+        targetVariationId: $lite,
+        randomizationUnit: "user",
+        stages: [
+          { allocation: 10000, durationMillis: 60000 },
+          { allocation: 25000, durationMillis: 60000 },
+          { allocation: 50000, durationMillis: 60000 }
+        ],
+        metrics: [{ key: "otto-brand-voice-score", isGroup: false }],
+        metricMonitoringPreferences: { "otto-brand-voice-score": { autoRollback: true } }
+      }]
+    }')" > /dev/null \
+  && echo "Started guarded rollout of Otto Rewriter (Lite) watching otto-brand-voice-score." \
+  || echo "(guarded rollout REST call failed — learner can configure it in the UI)"
 exit 0

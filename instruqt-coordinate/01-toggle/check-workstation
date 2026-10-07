@@ -1,2 +1,41 @@
 #!/bin/sh
+API="https://app.launchdarkly.com/api/v2"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+
+CFG=$(curl -s -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/concierge-toggle" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+if [ "$(printf '%s' "$CFG" | jq -r '.key // "null"')" = "null" ]; then
+  fail-message "There's no config with key concierge-toggle yet. In Create config, choose Agent and name it exactly Concierge Toggle (the key is derived from the name), then click Create."
+  exit 1
+fi
+if [ "$(printf '%s' "$CFG" | jq -r '.mode // ""')" != "agent" ]; then
+  fail-message "concierge-toggle exists but isn't in Agent mode. A config's mode is permanent, so delete it and create it again with Agent selected."
+  exit 1
+fi
+INSTRUCTIONS=$(printf '%s' "$CFG" | jq -r '[.variations[]?] | max_by(.version) | .instructions // ""' | head -c 8192)
+if [ -z "$INSTRUCTIONS" ]; then
+  fail-message "Concierge Toggle has no instructions yet. Open its Default variation, fill in the Instructions box with the text from the lab, then Review and save."
+  exit 1
+fi
+if ! printf '%s' "$INSTRUCTIONS" | grep -qi 'product'; then
+  fail-message "Concierge Toggle's instructions don't mention 'product' yet. Paste the triage instructions from the lab into the Default variation's Instructions box, then Review and save."
+  exit 1
+fi
+if ! printf '%s' "$INSTRUCTIONS" | grep -qi 'sizing'; then
+  fail-message "Concierge Toggle's instructions don't mention 'sizing' yet. Paste the triage instructions from the lab into the Default variation's Instructions box, then Review and save."
+  exit 1
+fi
+if ! printf '%s' "$INSTRUCTIONS" | grep -qi 'orders'; then
+  fail-message "Concierge Toggle's instructions don't mention 'orders' yet. Paste the triage instructions from the lab into the Default variation's Instructions box, then Review and save."
+  exit 1
+fi
+TARGETING=$(curl -s -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/concierge-toggle/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+FALL_IDX=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.variation // empty')
+DISABLED_IDX=$(printf '%s' "$TARGETING" | jq -r '[.variations[]? | .value._ldMeta.variationKey] | index("disabled") // index(null) // empty')
+ENABLED=$(printf '%s' "$TARGETING" | jq -r '.environments.test.enabled // false')
+if [ "$ENABLED" != "true" ] || [ -z "$FALL_IDX" ] || [ "$FALL_IDX" = "$DISABLED_IDX" ]; then
+  fail-message "Concierge Toggle isn't serving its Default variation in Test yet. On the Targeting tab, make sure the config is On and the Default rule serves Default, then Review and save."
+  exit 1
+fi
 exit 0

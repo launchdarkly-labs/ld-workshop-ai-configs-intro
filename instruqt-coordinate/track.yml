@@ -1,8 +1,8 @@
 slug: ld-agentcontrol-coordinate
-id: d5jxcsljq07u
+id: tggcdyjsn91q
 title: Coordinate Multi-Agent AI with AgentControl
-teaser: Otto grows into a team. Build a multi-agent Concierge, route customers
-  to specialists, and protect the brand voice with self-healing.
+teaser: Otto grows into a team. Build a multi-agent Concierge, route customers to
+  specialists, and protect the brand voice with self-healing.
 description: |-
   You've built an AI assistant and you've evaluated it. Now grow
   it into something bigger. In this track you'll create a multi-
@@ -16,11 +16,11 @@ description: |-
   before they ship.
 icon: https://launchdarkly.com/favicon-dark-mode.png
 tags:
+- multi-agent
+- agents
 - bedrock
 - ai
 - agentcontrol
-- agents
-- multi-agent
 owner: launchdarkly
 developers:
 - kcochran@launchdarkly.com
@@ -40,5 +40,5 @@ lab_config:
   hideStopButton: false
   default_layout: AssignmentRight
   default_layout_sidebar_size: 25
-checksum: ""
+checksum: "16787502030354800494"
 enhanced_loading: false

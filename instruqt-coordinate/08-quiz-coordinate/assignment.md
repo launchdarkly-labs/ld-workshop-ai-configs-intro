@@ -1,23 +1,26 @@
 ---
 slug: quiz-coordinate
-id: c51ucmx2mhud
+id: 2uyiyzmfyrrj
 type: quiz
 title: Quiz — Coordinating Otto
-teaser: A quick check on what you've built — agent mode, graphs, handoffs,
-  and SDK traversal.
+teaser: A quick check on what you've built — agent mode, graphs, handoffs, and SDK
+  traversal.
 notes:
 - type: text
-  contents: Placeholder. Quiz questions authored during Phase 9 of PHASES-coordinate.md.
+  contents: >-
+    One question on agent mode, graphs, and handoffs before the last two labs.
 answers:
-- Placeholder answer A.
-- Placeholder answer B.
-- Placeholder answer C.
-- Placeholder answer D.
+- The graph runs on LaunchDarkly's servers: the SDK sends the customer's message and receives Otto's final answer.
+- The graph is topology plus handoff data. The SDK returns the nodes, their resolved agent Configs, and the edges; your application decides what to call and in what order.
+- Each edge calls the target agent's model automatically as soon as the source agent finishes, so the server only has to call the root node.
+- Agent graphs can only connect completion-mode Configs, which is why Otto Assistant had to be converted to agent mode first.
 solution:
-- 0
-difficulty: ""
+- 1
+difficulty: basic
 timelimit: 600
 enhanced_loading: null
 ---
 
-<!-- Phase 9 placeholder. Quiz questions land during PHASES-coordinate.md Phase 9. -->
+# Quick check
+
+One question on what the Concierge taught you so far. Pick the best answer and click **Check**.

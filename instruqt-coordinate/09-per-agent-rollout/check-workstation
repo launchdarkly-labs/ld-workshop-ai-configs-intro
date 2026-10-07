@@ -1,2 +1,45 @@
 #!/bin/sh
-exit 0
+API="https://app.launchdarkly.com/api/v2"
+AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
+INT="https://app.launchdarkly.com/internal"
+
+CFG=$(curl -fsS -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/concierge-otto-rewriter" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+LITE=$(printf '%s' "$CFG" | jq -r '.variations[]? | select(.key=="otto-rewriter-lite") | .modelConfigKey // ""')
+if [ -z "$LITE" ]; then
+  fail-message "The Otto Rewriter (Lite) variation hasn't been created. Re-run setup, or use the Skip button if setup isn't working."
+  exit 1
+fi
+case "$(printf '%s' "$LITE" | tr 'A-Z' 'a-z')" in
+  *nova-lite*) ;;
+  *)
+    fail-message "Otto Rewriter (Lite) isn't using Amazon Nova Lite. Expected a model config containing nova-lite, got ${LITE}."
+    exit 1
+    ;;
+esac
+# The other four nodes must be untouched: plain variation fallthrough, no rollout.
+for node in concierge-toggle concierge-curator concierge-tailor concierge-tracker; do
+  T=$(curl -fsS -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/${node}/targeting" -H "$AUTH" -H 'LD-API-Version: beta')
+  if printf '%s' "$T" | jq -e '.environments.test.fallthrough.rollout' > /dev/null 2>&1; then
+    fail-message "${node} has a rollout on its Default rule. This challenge's point is that only Otto-the-rewriter is on trial: leave the other four agents serving their Default variation."
+    exit 1
+  fi
+done
+TARGETING=$(curl -fsS -X GET "${API}/projects/${LD_PROJECT_KEY}/ai-configs/concierge-otto-rewriter/targeting" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+if [ "$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.rollout.experimentAllocation.type // ""')" = "measuredRollout" ]; then
+  exit 0
+fi
+RELEASES=$(curl -s -X GET \
+  "${INT}/projects/${LD_PROJECT_KEY}/flags/concierge-otto-rewriter/automated-releases?filter=kind%3Aguarded%2CenvironmentKey%3Atest" \
+  -H "$AUTH" -H 'LD-API-Version: beta')
+RELEASE_COUNT=$(printf '%s' "$RELEASES" | jq -r '(.items // []) | length' 2>/dev/null || echo 0)
+if [ "${RELEASE_COUNT:-0}" -ge 1 ]; then
+  exit 0
+fi
+if printf '%s' "$TARGETING" | jq -e '.environments.test.fallthrough.rollout' > /dev/null 2>&1; then
+  fail-message "The rewriter's Default rule is a plain percentage rollout, not a guarded one. Click Edit on the Default rule, open Serve, and choose Guarded rollout so otto-brand-voice-score is watching the release."
+  exit 1
+fi
+fail-message "No guarded rollout has been started on Concierge Otto Rewriter's default rule in Test. On its Targeting tab, click Edit on the Default rule, open Serve, choose Guarded rollout, pick Otto Rewriter (Lite) as the target, add the Otto Brand Voice Score metric with Automatic rollback, and Review and save."
+exit 1
