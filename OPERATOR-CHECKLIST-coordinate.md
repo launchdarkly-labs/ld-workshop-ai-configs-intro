@@ -11,7 +11,7 @@ Three Instruqt runs on the pushed track (`instruqt track push`, lab projects `fl
 - **Participant pass, ch01–ch11: green.** Every Check passed as a learner would do it (configs built in the UI, graph built in the builder, ch07/ch10 pastes applied, guarded rollout rolled back automatically at ~3.5 min, forced heal observed).
 - **Skip pass: ch01–ch11 green** (two skip runs; the second confirmed the ch09 fix below).
 - **Fixed during the runs:** track setup minted the lab token with an inline role (403; now the custom-role form used by Build/Evaluate); the welcome challenge was dropped to match the sibling tracks; the rewriter's `{{question}}`/`{{draft}}` placeholders were being rendered to empty strings by the SDK (now sent in the user turn; DECISIONS.md); ch01–ch10 assignment prose now reflects the live UI.
-- **Still open for the operator:** the items below that are unticked. Everything ticked was verified in these runs.
+- **Still open for the operator:** the items below that are unchecked. Everything checked was verified in these runs.
 
 ## Cross-cutting items
 

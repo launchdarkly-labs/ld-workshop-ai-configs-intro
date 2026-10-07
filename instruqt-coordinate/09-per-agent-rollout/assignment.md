@@ -52,7 +52,7 @@ Open the [LaunchDarkly](#tab-0) tab, go to **Configs → Concierge Otto Rewriter
 4. Fill in the form:
    - **Original variation**: leave **Default**.
    - **Target variation**: choose **Otto Rewriter (Lite)**.
-   - **Metrics to monitor**: click **Select metrics or metric groups**, type `Otto Brand` in **Search metrics**, and click **Otto Brand Voice Score**. The row is added behind the picker; close the picker by clicking anywhere outside it. In the metric row, tick the **Auto rollback** checkbox.
+   - **Metrics to monitor**: click **Select metrics or metric groups**, type `Otto Brand` in **Search metrics**, and click **Otto Brand Voice Score**. The row is added behind the picker; close the picker by clicking anywhere outside it. In the metric row, check the **Auto rollback** checkbox.
    - **Target by**: leave **user**.
    - **Rollout duration**: open the dropdown and choose **Custom**. For each of the four stages, set the interval to **1** and change **hours** to **minutes**.
 5. Click **Review and save**. The **Save changes** dialog summarizes **Start release on default rule**: rollout Otto Rewriter (Lite) by user, original variation Default, duration 4 minutes in 5 steps, 1 metric. Click **Save**.

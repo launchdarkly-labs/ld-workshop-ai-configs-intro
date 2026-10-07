@@ -109,7 +109,7 @@ Otto's main Config doesn't know about this judge yet. Attach it to both variatio
 1. Navigate to **Configs** → **Otto Assistant**.
 2. For both **Otto (Born)** and **Otto (Premium)** (expand the variation if it's collapsed):
   a. Below the prompt, click **+ Add judges**.
-  b. Tick **Otto Brand Voice Judge** and click **Add 1 judge**.
+  b. Check **Otto Brand Voice Judge** and click **Add 1 judge**.
   c. In the **Judges** table, set its **Sampling percentage** to **25**.
 3. Click **Review and save**, then **Save changes**.
 

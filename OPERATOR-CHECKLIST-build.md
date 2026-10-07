@@ -90,4 +90,4 @@ These are recorded for context — recent commits already addressed them.
 
 ## How to mark progress
 
-Tick items as `[x]` when verified. Capture per-item gotchas inline as plain prose under the bullet (e.g. button label differs from what's in the docs; alternative wording the operator chose). When all per-challenge items are ticked and the cross-cutting smoke test passes, Build is genuinely ship-ready.
+Check items as `[x]` when verified. Capture per-item gotchas inline as plain prose under the bullet (e.g. button label differs from what's in the docs; alternative wording the operator chose). When all per-challenge items are checked and the cross-cutting smoke test passes, Build is genuinely ship-ready.

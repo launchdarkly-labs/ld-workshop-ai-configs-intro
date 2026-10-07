@@ -85,13 +85,13 @@ Adding a one-sentence prompt to suggest a complementary item improves brand-voic
   * **Variation served to user contexts outside this experiment**: leave **Otto (Born)**.
   * **Percent of user contexts in this experiment**: click **100%**.
 9. Under **Variations split**, all three variations start at roughly 33% each. Click **Edit**, and in the **Variation Split** dialog:
-  * Untick **Otto (Premium)**.
+  * Uncheck **Otto (Premium)**.
   * Click **Split equally** so **Otto (Born)** and **Otto (Recommender)** read 50% each.
   * Click **Save audience split**.
   * Back on the page, make sure **Control** shows **Otto (Born)**.
 10. Under **Metrics**:
   * **Metric source**: leave **LaunchDarkly hosted**.
-  * Click **Select metrics or metric groups**, tick **Otto Brand Voice Score**, and click **Done**. It becomes the primary metric.
+  * Click **Select metrics or metric groups**, check **Otto Brand Voice Score**, and click **Done**. It becomes the primary metric.
 11. Under **Statistical approach and success criteria**, open **Statistical approach** and choose **Bayesian**. Leave everything else at the default value.
 12. At the top of the page, click **Save**. The banner changes to **Experiment design is complete**.
 

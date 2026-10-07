@@ -73,7 +73,7 @@ Click-through completed by Claude Code via Chrome DevTools MCP on 2026-10-06 in 
 
 Click-through completed 2026-10-06; `assignment.md`, `check-workstation`, and `terraform/evaluate-02` updated.
 
-- [x] Judges live on the **Variations** tab: expand **Otto (Born)** → **+ Add judges** (next to Add message / Add tools) → dialog lists **Accuracy**, **Relevance**, **Toxicity** with an **All judges** tick → **Add 3 judges**. A **Judges** table appears (Event key `$ld:ai:judge:*`, **Provider** dropdown, **Sampling percentage** default 10%). **Review and save** → **Save changes**.
+- [x] Judges live on the **Variations** tab: expand **Otto (Born)** → **+ Add judges** (next to Add message / Add tools) → dialog lists **Accuracy**, **Relevance**, **Toxicity** with an **All judges** check → **Add 3 judges**. A **Judges** table appears (Event key `$ld:ai:judge:*`, **Provider** dropdown, **Sampling percentage** default 10%). **Review and save** → **Save changes**.
 - [x] Adding built-ins creates three judge-mode configs in the project (`accuracy`, `relevance`, `toxicity`). Terraform now creates them from captured templates (`builtin-judges/*.json`) before attaching.
 - [x] Monitoring has no "Evaluator metrics" dropdown; judge cards appear automatically under the **Charts** selector.
 - [ ] Confirm the realchat traffic + ch02 paste actually populate the judge cards (needs a live VM).
@@ -111,7 +111,7 @@ Full click-through completed 2026-10-06 (variation → experiment → start → 
 
 - [x] **Add variation** opens an **Untitled variation** card in **Draft**; no key field (`Otto (Recommender)` → `otto-recommender`). Model search box matches across providers.
 - [x] **Experimentation → Experiments → Create experiment** dialog: name, hypothesis, maintainer, tags → **Create experiment**. Lands on **Design** with "Experiment design is not complete". The hypothesis did **not** carry over into the Design page in the sandbox; the assignment tells learners to re-enter it.
-- [x] Design labels: **Assignment method**, **Flag or config** (Find a flag or config by name or key), **Targeting rule** (Default Rule), **Randomize by**, **Audience allocation** (percent buttons 5/10/50/100/Custom), **Variations split → Edit → Variation Split dialog** (Include in experiment ticks, **Split equally**, **Save audience split changes**), **Metrics → Select metrics or metric groups** (lists **Otto Brand Voice Score** by name) → **Done**, **Statistical approach** (Frequentist default, **Bayesian**), **Save**.
+- [x] Design labels: **Assignment method**, **Flag or config** (Find a flag or config by name or key), **Targeting rule** (Default Rule), **Randomize by**, **Audience allocation** (percent buttons 5/10/50/100/Custom), **Variations split → Edit → Variation Split dialog** (Include in experiment checks, **Split equally**, **Save audience split changes**), **Metrics → Select metrics or metric groups** (lists **Otto Brand Voice Score** by name) → **Done**, **Statistical approach** (Frequentist default, **Bayesian**), **Save**.
 - [x] Start: banner **Start** → **Start experiment** dialog; page switches to **Results**. Stop: **Stop** menu lists each variation (+ **Request approval to stop**) → **Stop experiment** dialog (variation to ship, reason, type `test`).
 - [x] API: create needs `maintainerId`; `ruleId: "fallthrough"`; `flagConfigVersion` = targeting env `_version`; start via `startIteration` semantic patch. Validated end-to-end with a scratch experiment (archived afterwards).
 - [ ] Time the experiment to convergence with synthetic traffic (needs live VM).
@@ -122,7 +122,7 @@ Full click-through completed 2026-10-06 (variation → experiment → start → 
 Full click-through completed 2026-10-06 (start → stop/roll back). Assignment, check, and solve rewritten; solve now starts a real guarded rollout via `startAutomatedRelease`.
 
 - [x] Entry point is **Default rule → Edit (pencil) → Serve dropdown → Rollout → Guarded rollout** (the ⋮ menu only has "Create experiment from rule"). No "Start guarded rollout" button.
-- [x] Form: **Original variation**, **Target variation**, **Metrics to monitor → Select metrics or metric groups** (row gains an **Automatic rollback** tick), **Target by**, **Rollout duration** (1 hour / 12 / 24 / 48 / 1 week / **Custom** → four stages 5/10/25/50% each with interval + unit days/hours/**minutes**). No separate "regression direction" or "on regression" controls; direction comes from the metric's success criterion.
+- [x] Form: **Original variation**, **Target variation**, **Metrics to monitor → Select metrics or metric groups** (row gains an **Automatic rollback** check), **Target by**, **Rollout duration** (1 hour / 12 / 24 / 48 / 1 week / **Custom** → four stages 5/10/25/50% each with interval + unit days/hours/**minutes**). No separate "regression direction" or "on regression" controls; direction comes from the metric's success criterion.
 - [x] **Review and save** → **Save changes** dialog titled "Start release on default rule" with a **Health check warnings** notice (expected with thin data). Live rule shows **In progress**, the split, remaining stages, and **Stop release** (→ **Roll forward** / **Roll back**).
 - [x] Targeting shape: `fallthrough.rollout.experimentAllocation.type == "measuredRollout"`; release history on the internal `automated-releases` endpoint (`status: manually_reverted` observed).
 - [ ] Observe an actual auto-rollback with background traffic + sabotage and record the timeline wording (`VERIFY` left in the assignment).
@@ -157,4 +157,4 @@ These are recorded for context — recent commits already addressed them.
 
 ## How to mark progress
 
-Tick items as `[x]` when verified. Capture per-item gotchas inline as plain prose under the bullet (e.g. UI label differs from the docs draft; alternative wording the operator chose). When all per-challenge items are ticked and the cross-cutting smoke test passes, Evaluate is genuinely ship-ready.
+Check items as `[x]` when verified. Capture per-item gotchas inline as plain prose under the bullet (e.g. UI label differs from the docs draft; alternative wording the operator chose). When all per-challenge items are checked and the cross-cutting smoke test passes, Evaluate is genuinely ship-ready.

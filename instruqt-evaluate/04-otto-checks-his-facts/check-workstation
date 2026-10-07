@@ -52,7 +52,7 @@ BORN=$(curl -s -X GET \
   -H "$AUTH" -H 'LD-API-Version: beta')
 ATTACHED=$(printf '%s' "$BORN" | jq -r '(.items // []) | max_by(.version) | .judgeConfiguration.judges // [] | map(select(.judgeConfigKey == "otto-claim-accuracy-judge")) | length')
 if [ "$ATTACHED" -lt 1 ]; then
-  fail-message "Otto Claim Accuracy Judge isn't attached to Otto (Born) yet. On Otto Assistant, expand Otto (Born), click + Add judges, tick Otto Claim Accuracy Judge, click Add 1 judge, then Review and save."
+  fail-message "Otto Claim Accuracy Judge isn't attached to Otto (Born) yet. On Otto Assistant, expand Otto (Born), click + Add judges, check Otto Claim Accuracy Judge, click Add 1 judge, then Review and save."
   exit 1
 fi
 

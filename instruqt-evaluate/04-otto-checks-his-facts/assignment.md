@@ -123,7 +123,7 @@ Respond with ONLY a number between 0.0 and 1.0. No other text.
 1. Navigate to **Configs** → **Otto Assistant**.
 2. For both **Otto (Born)** and **Otto (Premium)**:
   * Below the prompt, click **+ Add judges**.
-  * Tick **Otto Claim Accuracy Judge** and click **Add 1 judge**.
+  * Check **Otto Claim Accuracy Judge** and click **Add 1 judge**.
   * In the **Judges** table, set its **Sampling percentage** to **25**.
 3. Click **Review and save**, then **Save changes**.
 
