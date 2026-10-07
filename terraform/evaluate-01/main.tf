@@ -45,12 +45,18 @@ locals {
   playground_name = "Otto Born baseline"
   config_key      = "otto-assistant"
 
-  # Column A / column B. Model config keys are the GLOBAL Bedrock entries
-  # (shipped by LD); must match what Load config pulls from each variation.
-  column_a_variation = "otto-born"
-  column_a_model     = "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0"
-  column_b_variation = "otto-premium"
-  column_b_model     = "Bedrock.anthropic.claude-sonnet-4-6"
+  # Column A / column B. Load config copies each variation's Bedrock model,
+  # but the workshop account's Bedrock connection for playground runs is
+  # broken on LaunchDarkly's side (2026-10-07), so the assignment has the
+  # learner switch each column to the same model on the Anthropic provider.
+  # Mirror that here. Keys are the GLOBAL Anthropic model configs.
+  # When Bedrock is fixed, switch these (and the assignment) back to
+  # "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0" / "Bedrock.anthropic.claude-sonnet-4-6".
+  column_a_variation  = "otto-born"
+  column_a_model      = "Anthropic.claude-haiku-4-5-20251001"
+  column_b_variation  = "otto-premium"
+  column_b_model      = "Anthropic.claude-sonnet-4-6"
+  generation_provider = "Anthropic"
 
   # Playground defaults the learner does not change in ch01.
   evaluation_provider = "Anthropic"
@@ -189,7 +195,7 @@ resource "null_resource" "create_playground" {
           --argjson criteria '${local.criteria_json}' \
           '{
             name: $name,
-            generationProvider: "Bedrock",
+            generationProvider: "${local.generation_provider}",
             generationModel: $model,
             evaluationProvider: "${local.evaluation_provider}",
             evaluationModel: "${local.evaluation_model}",

@@ -55,10 +55,11 @@ Otto Born baseline
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
 2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Born)**.
 3. Click **Load config**.
-4. The model selector at the top of side A should now read **anthropic.claude-haiku-4-5-20251001-v1:0** (Bedrock). If it still says **Select model**, click it, choose **Bedrock**, and search for:
+4. The model selector at the top of side A now reads **anthropic.claude-haiku-4-5-20251001-v1:0** (Bedrock), copied from the variation. Playground runs in this workshop account go through LaunchDarkly's Anthropic connection rather than Bedrock, so swap it for the same model on the Anthropic provider: click the model selector, choose **Anthropic** in the provider list, search for the text below, and select the match.
 ```text
 claude-haiku-4-5-20251001
 ```
+   This only changes which API key the playground uses to call Haiku 4.5. Otto's variation in production still runs on Bedrock.
 5. Below the loaded prompt textarea, click **Add message**. The new message defaults to the **User** role.
 6. In the new message textarea, enter:
 ```text
@@ -70,7 +71,7 @@ claude-haiku-4-5-20251001
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
 2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Premium)**.
 3. Click **Load config**.
-4. The model selector at the top of side B should now read **anthropic.claude-sonnet-4-6** (Bedrock). If it still says **Select model**, click it, choose **Bedrock**, and search for:
+4. The model selector at the top of side B now reads **anthropic.claude-sonnet-4-6** (Bedrock). Swap it the same way: click the model selector, choose **Anthropic**, search for the text below, and select the match.
 ```text
 claude-sonnet-4-6
 ```

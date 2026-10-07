@@ -444,3 +444,11 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 
 **Consequences:** the lab tracks `main` live, so a broken push breaks the next lab start (keep `main` releasable, or pin `REPO_REF` to a tag when the workshop is being delivered). Only tracked files change: `app/.env` is gitignored and the Challenge-01 `server.py` patch is re-applied after the sync. Challenge setup/check/solve scripts are not affected by this at all; they come from `instruqt track push`. The Build track does not have the sync yet.
 
+## ch01 playground columns run on the Anthropic provider, not Bedrock (2026-10-07)
+
+**Decision:** in Evaluate ch01 the learner switches both playground columns from the Bedrock model that **Load config** copies in to the same model on the **Anthropic** provider (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`). The ch01 solve (`terraform/evaluate-01/main.tf`) creates its columns with `Anthropic.*` model config keys and `generationProvider: "Anthropic"`.
+
+**Why:** playground runs execute on LaunchDarkly's backend through the account-level Manage API keys integration. The operator confirmed on 2026-10-07 that the Bedrock entry in the Hands-on Workshops account is broken on LaunchDarkly's side; every run ended `PERMANENT_ERROR: Bedrock request failed: AccessDenied`. The Anthropic key in the same account works and already grades the acceptance criteria.
+
+**Consequences:** the model the learner evaluates is the same Claude model Otto runs on, reached through a different API key; the assignment says so in one sentence. Otto's production variations stay on Bedrock. Revert the assignment steps and the two Terraform locals when LaunchDarkly fixes the Bedrock connection.
+
