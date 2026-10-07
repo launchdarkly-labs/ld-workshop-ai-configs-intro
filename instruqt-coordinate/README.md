@@ -8,7 +8,6 @@ Otto's character survives: he becomes the brand-voice rewriter inside a team cal
 
 | # | Challenge | Terraform / code |
 |---|---|---|
-| 00 | welcome | — |
 | 01 | toggle — first agent-mode Config | `terraform/coordinate-01` |
 | 02 | the-curator | `terraform/coordinate-02` (loads `product-catalog` snippet) |
 | 03 | the-tailor | `terraform/coordinate-03` |

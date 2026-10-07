@@ -482,3 +482,13 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 
 **Why:** Python has no way to guard the existing block without re-indenting it, and a second Bedrock call to Otto Assistant per request would muddle the lesson (two Ottos answering). A clean replacement with exact anchors is the smallest honest edit; `patch-server.py` does the same replacement for Skip.
 
+
+## Coordinate has no welcome challenge; the lab token is minted from the bootstrap custom role (2026-10-07)
+
+**Decision:** Drop `instruqt-coordinate/00-welcome/` and open the track on ch01 (`toggle`), whose intro now carries the "where Otto is", mode-permanence and Concierge-cast framing. Mint the scoped `LD_API_TOKEN` exactly as Build and Evaluate do: look up the bootstrap-created `<project>-admin` custom role and `POST /api/v2/tokens` with `customRoleIds` + `serviceToken: true`.
+
+**Rationale:** The operator removed the welcome challenges from Build (2026-09-10) and Evaluate (2026-09-29); Coordinate should match. Independently, the Instruqt CLI never pushed the `00-*` directory (remote pull showed 01–11 only, even after a rename and `--force`), so a welcome would have been invisible anyway. The first live Coordinate run failed in track setup with `curl: (22) … 403` on the token mint: the operator token cannot create tokens with an `inlineRole`, only from existing custom roles. That aborted setup (`set -e`), so no `.env`, Build/Evaluate solves or server patches ran.
+
+**Alternatives considered:**
+- *Keep the welcome and debug the CLI.* Rejected: diverges from the sibling tracks and the CLI behaviour had no visible cause.
+- *Fall back to `inlineRole` on 403.* Rejected: the custom-role path already exists and is proven in two tracks.

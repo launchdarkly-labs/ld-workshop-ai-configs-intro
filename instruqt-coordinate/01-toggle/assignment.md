@@ -31,6 +31,24 @@ timelimit: 900
 enhanced_loading: null
 ---
 
+# Where Otto is now
+
+Otto has had quite a run. In Build he was born, got his voice from the `brand-voice` snippet, learned to tell Free from Premium customers, and started reporting on himself. In Evaluate he was graded offline, judged online, experimented on, guarded during a risky rollout, and taught to fall back to a safe variation when his scores slipped. Your project already contains all of it, and the [ToggleWear](#tab-1) app is answering as Otto right now.
+
+He's good at his job. He's also alone. Every customer question, whatever it's about, lands on one prompt and one model.
+
+Otto is a **completion-mode** Config, and a Config's mode is permanent. Agent mode, which gives a Config a single `instructions` string, tools, and a place in an **agent graph**, is a different kind of Config. You can't flip Otto over; you can only build around him. So in this track you'll build a team around him: the **Concierge**.
+
+| Agent | Role | Mode |
+|---|---|---|
+| **Toggle** | Front desk. Reads the customer's message and names the specialist who should handle it. | agent |
+| **Curator** | Product specialist. Answers from the catalog, and only from the catalog. | agent |
+| **Tailor** | Sizing specialist. Honest about what it doesn't know. | agent |
+| **Tracker** | Orders and shipping specialist. Never invents an order status. | agent |
+| **Otto** | Brand-voice rewriter. Every specialist's draft passes through him before the customer sees it. | agent (a new Config; the original Otto stays as he is) |
+
+Topology: `Toggle → (Curator | Tailor | Tracker) → Otto → customer`
+
 # Why Toggle comes first
 
 Toggle is the front desk. Every customer message starts with him, and his only job is to say which specialist should take it. That makes him the simplest agent in the Concierge, and the right place to meet **agent mode**.

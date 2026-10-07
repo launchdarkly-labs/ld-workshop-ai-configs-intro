@@ -6,8 +6,8 @@ Authored 2026-10-07 in one pass (Phases 2–10 of PHASES-coordinate.md). Everyth
 
 ## Cross-cutting items
 
-- [ ] **First live run.** Launch `ld-agentcontrol-coordinate`, play ch00–ch11 as a participant, then once more with Skip. Expect the same class of issues the Evaluate runs surfaced: label drift in assignments, and solve/check assumptions about API shapes.
-- [ ] **Track-level setup timing.** Coordinate's setup applies Build's 5 solves + Evaluate's 5 solves + 4 server patches before the learner sees ch00. Evaluate's bootstrap already took ~90 s; expect 2–3 minutes here. If that is too long, pre-bake the post-Evaluate state into the image (PHASES-coordinate.md Phase 10).
+- [ ] **First live run.** Launch `ld-agentcontrol-coordinate`, play ch01–ch11 as a participant, then once more with Skip. Expect the same class of issues the Evaluate runs surfaced: label drift in assignments, and solve/check assumptions about API shapes.
+- [ ] **Track-level setup timing.** Coordinate's setup applies Build's 5 solves + Evaluate's 5 solves + 4 server patches before the learner sees ch01. Evaluate's bootstrap already took ~90 s; expect 2–3 minutes here. If that is too long, pre-bake the post-Evaluate state into the image (PHASES-coordinate.md Phase 10).
 - [ ] **Agent-mode variation editor labels.** Assignments assume fields named **Description** and **Instructions**, a **Select model** picker identical to completion mode, and **Load snippet** available in the Instructions editor. Verified: snippet references and `{{variables}}` *expand* in agent instructions (SDK returns the substituted text). Unverified: the editor's exact labels. ch01–ch05 carry the markers.
 - [ ] **Graph builder flow.** ch06's steps for adding nodes, marking the root, drawing edges and entering handoff JSON are drafts from the docs ("click the + on an edge, enter JSON, click outside to save"). The REST shape is verified (`POST /api/v2/projects/{proj}/agent-graphs` with `rootConfigKey` + `edges[{key,sourceConfig,targetConfig,handoff}]`), so the solve and check are solid; the UI prose is not.
 - [ ] **Key derivation for agent Configs.** Checks require exact keys (`concierge-toggle`, `concierge-curator`, `concierge-tailor`, `concierge-tracker`, `concierge-otto-rewriter`). The Create config dialog (inspected live) has a **Name** field and derives the key; confirm the derived key for "Concierge Otto Rewriter" is `concierge-otto-rewriter` and whether an **Edit key** control exists to fix mistakes.
@@ -20,9 +20,6 @@ Authored 2026-10-07 in one pass (Phases 2–10 of PHASES-coordinate.md). Everyth
 - [ ] **Instruqt sandbox idle.** Lessons from the Evaluate runs apply: a sandbox that naps comes back as a new project; a retry Start does not re-run a failed setup; the code-server git toast steals the first keystrokes.
 
 ## Per-challenge verification
-
-### 00 Welcome
-- [ ] Reads cleanly after ch11 is written (it references the three tracks).
 
 ### 01 Toggle
 - [ ] Create config → **Agent** → Name "Concierge Toggle" → key `concierge-toggle`.

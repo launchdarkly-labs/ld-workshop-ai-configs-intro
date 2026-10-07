@@ -19,11 +19,10 @@ By the end of Coordinate, the learner has used every major Lesson-3 surface of A
 - Wrapped the system with a **per-agent guarded rollout** that affects only one node (Otto-the-rewriter) without disturbing the others.
 - Implemented **self-healing** — a synchronous judge call inside Otto's response path that regenerates with a fallback model if the response scores below threshold.
 
-### Challenge list (12 challenges, ~2h)
+### Challenge list (11 challenges, ~2h; the welcome was dropped 2026-10-07 to match Build and Evaluate)
 
 | # | Slug | Type |
 |---|---|---|
-| 00 | welcome | challenge |
 | 01 | toggle | challenge (build first agent-mode Config) |
 | 02 | the-curator | challenge (product specialist) |
 | 03 | the-tailor | challenge (sizing specialist) |

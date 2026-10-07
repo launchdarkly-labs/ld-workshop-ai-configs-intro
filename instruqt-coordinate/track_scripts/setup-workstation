@@ -61,16 +61,25 @@ echo "export LD_SDK_KEY=${LD_SDK_KEY}" >> ~/.profile
 echo "export LD_SDK_KEY=${LD_SDK_KEY}" >> ~/.bashrc
 
 # Mint a scoped API token restricted to this project only. See note in
-# Build's track-level setup-workstation for the security rationale.
-LD_API_TOKEN=$(curl -fsS -X POST \
-  "https://app.launchdarkly.com/api/v2/tokens" \
-  -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  --data-raw "$(jq -n \
-    --arg name "Lab token: ${LD_PROJECT_KEY}" \
-    --arg proj "${LD_PROJECT_KEY}" \
-    '{name: $name, inlineRole: [{effect: "allow", actions: ["*"], resources: [("proj/" + $proj), ("proj/" + $proj + ":*")]}]}')" \
-  | jq -r .token)
+# Build's track-level setup-workstation for the security rationale. The
+# bootstrap creates a `<project>-admin` custom role; the operator token
+# may only mint tokens from custom roles (inline roles return 403).
+CUSTOM_ROLE_ID=$(curl -s https://app.launchdarkly.com/api/v2/roles/${LD_PROJECT_KEY}-admin \
+     -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
+     -H "Content-Type: application/json" | jq -r '._id')
+
+export LD_API_TOKEN=$(curl -fsS -X POST https://app.launchdarkly.com/api/v2/tokens \
+     -H "Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}" \
+     -H "Content-Type: application/json" \
+     -d '{
+  "name": "Lab token: '${LD_PROJECT_KEY}'",
+  "customRoleIds": [
+    "'${CUSTOM_ROLE_ID}'"
+  ],
+  "serviceToken": true
+}' | jq -r '.token')
+echo "export LD_API_TOKEN=${LD_API_TOKEN}" >> ~/.profile
+echo "export LD_API_TOKEN=${LD_API_TOKEN}" >> ~/.bashrc
 
 # 3. Update the app's .env.
 APP_ENV="${REPO}/app/.env"
