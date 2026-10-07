@@ -209,7 +209,6 @@ Every request logs the route Toggle chose, the specialist that drafted, and the 
 
 # In LaunchDarkly
 
-Open the [LaunchDarkly](#tab-0) tab, go to **Agents → Graphs → Concierge**, and look at the graph's monitoring: requests, tokens and latency per node, all tagged with the one graph key.
-<!-- VERIFY: confirm what the graph detail page shows for traffic (per-node metrics, graph-level success count) and the exact tab name. -->
+Open the [LaunchDarkly](#tab-0) tab and go to **Agents → Graphs → Concierge**. The **Graph** tab now carries numbers: **Global values** at the top shows the graph's invocations, and every node card shows its own **Invocations** (with the share of traffic that reached it), **Avg. duration**, **Error rate** and token counts. Toggle and the rewriter sit at 100% because every request passes through them; the three specialists split the rest according to what customers asked. The **Monitoring** tab charts the same metrics over time, all tagged with the one graph key.
 
 Click **Check** when `server.py` evaluates the `concierge` graph, the old Otto block is gone, and the app answers a question through the team.

@@ -52,16 +52,16 @@ Open the [LaunchDarkly](#tab-0) tab, go to **Configs → Concierge Otto Rewriter
 4. Fill in the form:
    - **Original variation**: leave **Default**.
    - **Target variation**: choose **Otto Rewriter (Lite)**.
-   - **Metrics to monitor**: click **Select metrics or metric groups** and click **Otto Brand Voice Score** in the search results. The row is added behind the picker; close the picker by clicking anywhere outside it. In the metric row, tick **Automatic rollback**.
+   - **Metrics to monitor**: click **Select metrics or metric groups**, type `Otto Brand` in **Search metrics**, and click **Otto Brand Voice Score**. The row is added behind the picker; close the picker by clicking anywhere outside it. In the metric row, tick the **Auto rollback** checkbox.
    - **Target by**: leave **user**.
-   - **Rollout duration**: open the dropdown and choose **Custom**. Set each of the four stages to **1** **minutes**.
-5. Click **Review and save**. The dialog reads **Start release on default rule** with Otto Rewriter (Lite) as the rollout and Default as the original variation. Click **Save**.
+   - **Rollout duration**: open the dropdown and choose **Custom**. For each of the four stages, set the interval to **1** and change **hours** to **minutes**.
+5. Click **Review and save**. The **Save changes** dialog summarizes **Start release on default rule**: rollout Otto Rewriter (Lite) by user, original variation Default, duration 4 minutes in 5 steps, 1 metric. Click **Save**.
 
 # Watch one node fail safely
 
-The Default rule card shows the release **In progress** with the current split and a **Stop release** button. As the stages advance and Nova Lite serves more of the rewriter traffic, its brand-voice scores drag the metric down. Within two to three minutes the guard fires:
+The Default rule card now reads **Release phase 1 of 1**, **Monitoring Default rule for regressions...**, with the stage percentages (5% → 10% → 25% → 50% → 100%), a countdown to the next step, and a **Stop release** button. Until the first minute passes it says **Not enough data, analysis pending**. As the stages advance and Nova Lite serves more of the rewriter traffic, its brand-voice scores drag the metric down. Regression detection needs a minimum sample on the Lite side, so it fires three to four minutes in, around the 50% stage:
 
-- The card reads **Default rule rolled back automatically after detecting a regression for Otto Brand Voice Score**.
+- The card reads **Default rule rolled back automatically after detecting a regression for Otto Brand Voice Score**, with a **Review regression** link and a chart of the Lite variation's score sitting well below the original.
 - The rewriter snaps back to **Default** on Haiku.
 
 While that's happening, open **Configs → Concierge Curator → Targeting** in another look. Nothing changed. The Curator never knew there was a rollout. That is the point of per-agent rollouts: the risk is scoped to the node you're changing.
