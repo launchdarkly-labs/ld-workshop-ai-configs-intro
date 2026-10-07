@@ -36,7 +36,7 @@ Free shoppers and premium ToggleWear members get different treatment everywhere 
 
 We're going to:
 
-1. Add a second variation backed by **Claude Sonnet 4.5** with a richer premium-tier prompt.
+1. Add a second variation backed by **Claude Sonnet 4.6** with a richer premium-tier prompt.
 2. Add a **targeting rule** that routes premium customers to that variation. Free shoppers keep getting the Haiku-backed Otto from the earlier challenges.
 3. Test by flipping the user-tier dropdown on ToggleWear.
 

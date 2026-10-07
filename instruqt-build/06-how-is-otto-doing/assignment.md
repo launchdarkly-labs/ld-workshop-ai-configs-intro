@@ -63,4 +63,6 @@ The monitoring view shows your AgentControl's performance broken down by variati
 
 # What happens next
 
-Otto is healthy in `Test`. The next challenge is the scary one: a new model variation is going live, and we want AgentControl to *automatically pull the plug* if quality drops. Click **Check** when you're satisfied with what you see here.
+Otto is healthy in `Test`, and that is where Build ends: you created him, gave him a voice, factored that voice into reusable snippets, split him into Free and Premium variations, and read his first production dashboard. The next track, **Evaluate**, starts from exactly this state and asks the harder question: how do you *prove* Otto is good, and what should happen automatically when he isn't?
+
+Click **Check** when you've had a good look around the monitoring view.
