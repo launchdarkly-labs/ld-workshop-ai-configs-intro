@@ -11,7 +11,7 @@ Author-side cleanup of stale `<!-- VERIFY -->` markers and recent bug-fix commit
 Two Instruqt runs on the pushed track (lab projects `shining-owl`, `capital-redbird`) plus a skip-only run:
 
 - **Participant pass, ch01–ch07: green.** Config and variation built in the UI, prompt edited, snippets created and loaded, premium variation + targeting rule built in the rule builder, monitoring dashboard populated, both quizzes answered.
-- **Skip pass: see the per-challenge notes below.**
+- **Skip pass: ch01–ch07 green** (solves for 01/02/03/05 apply Terraform; 06 re-runs the traffic generator; quizzes skip).
 - **Fixed during the runs:** the published track had diverged from the repo (no quiz, no lab-token mint, two extra developers) — the repo version was force-pushed with the developers adopted and the quiz restored; track setup now syncs the VM clone and mints the lab token from the custom role (the inline-role POST returns 403); the model checks in ch01/ch05 match on the model id because the model picker now creates hashed project model-config keys; fail-messages are plain text; ch01/ch05/ch06 prose rewritten from the live UI; ch06's outro no longer tees up the guarded-rollout challenge that moved to Evaluate.
 - **Decision for the operator:** the published track had dropped the quiz (`04-quiz-configs-and-snippets`). It is back because the repo is the source of truth; delete it in the repo if the removal was intentional.
 
@@ -60,7 +60,7 @@ For each challenge: confirm UI labels in `assignment.md` against the live LD UI;
 - [x] Verified **Add variation** flow (new draft opens below Born; key derived from the name).
 - [x] Confirmed: under **Bedrock**, search `claude-sonnet-4-6` → **anthropic.claude-sonnet-4-6** (model-config key `Bedrock.anthropic.claude-sonnet-4-6`). Model picker shows `claude-sonnet-4-6` under Anthropic (currently in the assignment.md). If the displayed model name differs, update assignment.md.
 - [x] Verified: **Add rule** (+) → **Build a custom rule**; attribute typeahead offers **tier**; values typeahead offers **premium**; **Select a variation...**. UI for adding a targeting rule on the Targeting tab: **+** menu, **Build a custom rule** option, context-kind picker, attribute picker, operator picker, value entry.
-- [ ] Confirm Otto on the [ToggleWear](#tab-1) tab actually changes behavior when the **Logged in as** dropdown is switched from Free to Premium (relies on the SDK picking up the targeting rule).
+- [x] Confirmed via /chat: tier free → us.anthropic.claude-haiku-4-5-20251001-v1:0 (~500 chars), tier premium → us.anthropic.claude-sonnet-4-6 (~1,150 chars). Otto changes behavior when the **Logged in as** dropdown is switched.
 - [ ] Capture screenshots of the rule-builder flow.
 
 ### 06 How is Otto doing
