@@ -6,8 +6,9 @@ title: The Tailor
 teaser: Add the sizing specialist — the second of three back-of-house agents.
 notes:
 - type: text
-  contents: >-
-    Add the Tailor, the sizing specialist. Same build as the Curator; the difference is entirely in the instructions, which tell the Tailor exactly what it knows and, more importantly, what it doesn't.
+  contents: Add the Tailor, the sizing specialist. Same build as the Curator; the
+    difference is entirely in the instructions, which tell the Tailor exactly what
+    it knows and, more importantly, what it doesn't.
 tabs:
 - id: eots4ssderf5
   title: LaunchDarkly

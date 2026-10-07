@@ -6,13 +6,17 @@ title: Wrap-Up
 teaser: Otto's arc, across all three tracks. One last question.
 notes:
 - type: text
-  contents: >-
-    Otto is measured, judged, experimented on, guarded, and now part of a team. One last question closes the three-track arc.
+  contents: Otto is measured, judged, experimented on, guarded, and now part of a
+    team. One last question closes the three-track arc.
 answers:
-- "A guarded rollout protects every request synchronously, so once it's configured the self-healing judge in Coordinate 10 is redundant."
-- "The three nets differ by timescale: a guarded rollout protects the next customers at release time, adaptive switching protects the next customers between requests, and self-healing protects the current customer on this request, at the cost of extra latency."
-- "Self-healing is the cheapest net because it never calls a model; it reads the guarded rollout's metric instead."
-- "All three nets act on the same event: a judge score below threshold immediately rolls back the release, flips targeting, and regenerates the response."
+- A guarded rollout protects every request synchronously, so the self-healing judge
+  in Coordinate 10 is redundant.
+- 'They differ by timescale: guarded rollout at release time, adaptive switching between
+  requests, self-healing on the current request, at a latency cost.'
+- Self-healing is the cheapest net because it never calls a model; it reads the guarded
+  rollout's metric instead.
+- 'All three act on the same event: a low judge score rolls back the release, flips
+  targeting, and regenerates the response at once.'
 solution:
 - 1
 difficulty: basic

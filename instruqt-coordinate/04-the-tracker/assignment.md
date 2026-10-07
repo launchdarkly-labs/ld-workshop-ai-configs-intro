@@ -7,8 +7,9 @@ teaser: Add the order-status specialist — the third back-of-house agent comple
   the Concierge's middle tier.
 notes:
 - type: text
-  contents: >-
-    Add the Tracker, the order-status specialist, and the Concierge has all three back-of-house agents. The Tracker's instructions are the strictest of the three: it has no access to orders and must never pretend it does.
+  contents: 'Add the Tracker, the order-status specialist, and the Concierge has all
+    three back-of-house agents. The Tracker''s instructions are the strictest of the
+    three: it has no access to orders and must never pretend it does.'
 tabs:
 - id: aegyhvbamcet
   title: LaunchDarkly

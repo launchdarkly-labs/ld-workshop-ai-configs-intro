@@ -7,8 +7,9 @@ teaser: Add a synchronous judge inside the rewriter — if Otto's response fails
   brand-voice check, regenerate before the user sees it.
 notes:
 - type: text
-  contents: >-
-    Add the per-request safety net: a synchronous brand-voice judge inside the rewriter that regenerates an off-brand response on a pinned fallback model before the customer ever sees it, and counts every heal in a metric.
+  contents: 'Add the per-request safety net: a synchronous brand-voice judge inside
+    the rewriter that regenerates an off-brand response on a pinned fallback model
+    before the customer ever sees it, and counts every heal in a metric.'
 tabs:
 - id: fdt26j0xiwel
   title: LaunchDarkly

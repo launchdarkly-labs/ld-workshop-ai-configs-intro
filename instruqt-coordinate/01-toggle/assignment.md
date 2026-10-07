@@ -7,8 +7,10 @@ teaser: Build your first agent-mode Config — and feel the mode-permanence cons
   that makes the rest of this track make sense.
 notes:
 - type: text
-  contents: >-
-    Build your first agent-mode Config. Toggle is the Concierge's front desk: he reads each customer message and names the specialist who should handle it. Along the way you'll see the mode selector that can't be changed later, which is the reason Otto himself can't simply be converted.
+  contents: 'Build your first agent-mode Config. Toggle is the Concierge''s front
+    desk: he reads each customer message and names the specialist who should handle
+    it. Along the way you''ll see the mode selector that can''t be changed later,
+    which is the reason Otto himself can''t simply be converted.'
 tabs:
 - id: jdt2qoxhqax0
   title: LaunchDarkly

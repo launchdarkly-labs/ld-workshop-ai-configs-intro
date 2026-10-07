@@ -7,8 +7,10 @@ teaser: Otto joins the Concierge as the brand-voice rewriter — the final node 
   response passes through before reaching the customer.
 notes:
 - type: text
-  contents: >-
-    Otto joins the Concierge as the brand-voice rewriter, the final node every response passes through. It's a new agent-mode Config, and its instructions load the very same brand-voice snippet that has driven Otto's prompt since Build and his judge since Evaluate.
+  contents: Otto joins the Concierge as the brand-voice rewriter, the final node every
+    response passes through. It's a new agent-mode Config, and its instructions load
+    the very same brand-voice snippet that has driven Otto's prompt since Build and
+    his judge since Evaluate.
 tabs:
 - id: wjlxv03pk38s
   title: LaunchDarkly

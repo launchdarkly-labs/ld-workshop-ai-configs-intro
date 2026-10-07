@@ -6,8 +6,10 @@ title: The Curator
 teaser: Build the product-knowledge specialist that Toggle hands off to.
 notes:
 - type: text
-  contents: >-
-    Build the Curator: the product-knowledge specialist Toggle hands product questions to. Its instructions start by loading the same product-catalog snippet the claim-accuracy judge uses, so the catalog has one source of truth across agents and judges.
+  contents: 'Build the Curator: the product-knowledge specialist Toggle hands product
+    questions to. Its instructions start by loading the same product-catalog snippet
+    the claim-accuracy judge uses, so the catalog has one source of truth across agents
+    and judges.'
 tabs:
 - id: 6bukvxckj9hc
   title: LaunchDarkly

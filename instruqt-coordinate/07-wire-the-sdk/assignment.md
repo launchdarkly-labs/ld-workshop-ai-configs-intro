@@ -6,8 +6,10 @@ title: Wire the SDK
 teaser: Traverse the graph from Python — server.py becomes a multi-agent dispatcher.
 notes:
 - type: text
-  contents: >-
-    Replace Otto's single Bedrock call in server.py with graph-driven dispatch. The Python SDK hands your code the graph, each node's resolved agent Config, and the handoff data on every edge; your code calls Toggle, follows the matching edge to a specialist, then hands the draft to Otto.
+  contents: Replace Otto's single Bedrock call in server.py with graph-driven dispatch.
+    The Python SDK hands your code the graph, each node's resolved agent Config, and
+    the handoff data on every edge; your code calls Toggle, follows the matching edge
+    to a specialist, then hands the draft to Otto.
 tabs:
 - id: dokcdq2kd5yy
   title: LaunchDarkly

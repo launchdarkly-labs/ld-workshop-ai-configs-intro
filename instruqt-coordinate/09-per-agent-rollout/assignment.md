@@ -7,8 +7,10 @@ teaser: Roll out a cheaper model to just one node — Otto-the-rewriter — with
   the other agents. Bounded blast radius.
 notes:
 - type: text
-  contents: >-
-    Roll a cheaper model out to one node only. Otto-the-rewriter gets a Nova Lite variation behind a guarded rollout watching the brand-voice score; Toggle and the three specialists are never touched. The guard fires, the rewriter rolls back, and the rest of the team never noticed.
+  contents: Roll a cheaper model out to one node only. Otto-the-rewriter gets a Nova
+    Lite variation behind a guarded rollout watching the brand-voice score; Toggle
+    and the three specialists are never touched. The guard fires, the rewriter rolls
+    back, and the rest of the team never noticed.
 tabs:
 - id: iiicuu1vg3co
   title: LaunchDarkly

@@ -7,8 +7,10 @@ teaser: Wire the five agent Configs into an agent graph with handoff data on eve
   edge.
 notes:
 - type: text
-  contents: >-
-    Wire the five agent Configs into an agent graph: Toggle as the root, an edge to each specialist carrying a routing hint, and an edge from each specialist to Otto. The graph is topology plus handoff data; your code does the traversing in the next challenge.
+  contents: 'Wire the five agent Configs into an agent graph: Toggle as the root,
+    an edge to each specialist carrying a routing hint, and an edge from each specialist
+    to Otto. The graph is topology plus handoff data; your code does the traversing
+    in the next challenge.'
 tabs:
 - id: yegs3yooq5z9
   title: LaunchDarkly
