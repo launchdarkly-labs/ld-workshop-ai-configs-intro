@@ -119,16 +119,16 @@ The block grades `assistant_text` with the same **Otto Brand Voice Judge** you b
 
 # See it work
 
-Most rewrites pass. To watch a heal, make one fail:
+Most rewrites pass, even on Nova Lite: real scores land between about 0.6 and 0.85, and a heal only fires below 0.5. So first watch the judge grade, then force a heal.
 
-1. Open the [LaunchDarkly](#tab-0) tab, go to **Configs → Concierge Otto Rewriter → Targeting**, click **Edit** on the Default rule, open **Serve**, and choose **Otto Rewriter (Lite)**. **Review and save**, then **Save changes**. Nova Lite is now rewriting every response.
-2. Open the [ToggleWear](#tab-1) tab and ask a few questions.
-3. In the [Code Editor](#tab-2) terminal, follow the log:
+1. Open the [LaunchDarkly](#tab-0) tab, go to **Configs → Concierge Otto Rewriter → Targeting**, click **Edit** on the Default rule, open **Serve**, and choose **Otto Rewriter (Lite)**. **Review and save**, then **Save**. Nova Lite is now rewriting every response.
+2. In the [Code Editor](#tab-2) terminal (**Terminal → New Terminal**), follow the log:
 ```bash
 journalctl -u togglewear -f | grep self-heal
 ```
-   Passing rewrites log `score=0.8x passed`. When Nova Lite drifts off-brand you'll see `below 0.50: regenerated on us.anthropic.claude-haiku-4-5-20251001-v1:0`, and the answer in ToggleWear is the healed one.
-4. Put the rewriter back: **Targeting → Edit → Serve → Default**, **Review and save**, **Save changes**.
+   Background traffic is already asking questions, so within a few seconds you'll see lines like `self-heal session=realchat-… score=0.85 passed`. Ask something yourself in the [ToggleWear](#tab-1) tab and watch your own request get graded.
+3. Now force a heal. In `server.py`, find `SELF_HEAL_THRESHOLD = 0.5` in the block you just pasted and change it to `0.9`. Save. Within a few requests the log shows `score=0.85 below 0.90: regenerated on us.anthropic.claude-haiku-4-5-20251001-v1:0 (was us.amazon.nova-lite-v1:0)`, and the answer the customer sees is the healed one.
+4. Put both things back: set the threshold to `0.5` again and save; then in LaunchDarkly, **Targeting → Edit → Serve → Default**, **Review and save**, **Save**.
 
 Under **Metrics**, open **Concierge self-heal** to see the count of heals so far.
 
