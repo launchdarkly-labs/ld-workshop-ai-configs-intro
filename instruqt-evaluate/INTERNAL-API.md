@@ -331,3 +331,11 @@ Release items also expose `events[]` (`stage_started`, `monitoring_window_expire
 ### 409s to expect
 - `startAutomatedRelease` and `updateFallthroughVariationOrRollout` return **409** while an experiment
   iteration is running on the fallthrough, and (for the latter) while a guarded rollout is in progress.
+
+### Token caveats (2026-10-06)
+- The per-lab scoped `LD_API_TOKEN` (project-scoped inline role) can read/patch `/api/v2/.../ai-configs/.../targeting`,
+  create AI configs, snippets and metrics, and run the ch04/ch07 solves end to end. But
+  `GET /internal/.../automated-releases` returns 200 with no `items` for it — only the operator token sees releases.
+  Anything that needs the release list (ch07 check, ch08 setup guard) must run with `LAUNCHDARKLY_ACCESS_TOKEN`.
+- Guarded rollouts in the lab auto-revert fast once Formal gets traffic (observed +106s, +167s, +171s), so an
+  in-progress release is a narrow window to test against.
