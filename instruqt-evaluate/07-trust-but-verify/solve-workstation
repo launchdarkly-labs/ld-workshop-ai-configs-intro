@@ -19,6 +19,10 @@
 
 set -e
 
+# Same guard as setup: a running ch06 experiment makes startAutomatedRelease 409.
+python3 /opt/ld/ai-configs-intro/terraform/evaluate-06/setup-experiment.py \
+  --project "${LD_PROJECT_KEY}" --stop-if-running || true
+
 cd /opt/ld/ai-configs-intro/terraform/evaluate-07
 terraform init
 terraform apply -auto-approve
@@ -45,7 +49,13 @@ if printf '%s' "$TARGETING" | jq -e '.environments.test.fallthrough.rollout.expe
 fi
 
 FORMAL_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-formal") | ._id')
-BORN_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-born") | ._id')
+# The rollout's original variation must be what the Default rule serves right
+# now: Otto (Recommender) if ch06 shipped the winner, Otto (Born) otherwise.
+# fallthrough.variation is an index into .variations.
+BORN_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.variation as $i | if $i == null then empty else .variations[$i]._id end')
+if [ -z "$BORN_VAR_ID" ]; then
+  BORN_VAR_ID=$(printf '%s' "$TARGETING" | jq -r '.variations[]? | select(.value._ldMeta.variationKey == "otto-born") | ._id')
+fi
 
 if [ -z "$FORMAL_VAR_ID" ] || [ -z "$BORN_VAR_ID" ]; then
   echo "Could not resolve otto-formal / otto-born variation ids — learner can configure the rollout in the UI."

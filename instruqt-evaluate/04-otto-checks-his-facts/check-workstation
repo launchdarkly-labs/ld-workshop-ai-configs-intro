@@ -23,7 +23,7 @@ SNIP_STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
   "${API}/projects/${LD_PROJECT_KEY}/ai-configs/prompt-snippets/product-catalog" \
   -H "$AUTH" -H 'LD-API-Version: beta')
 if [ "$SNIP_STATUS" != "200" ]; then
-  fail-message "The **product-catalog** snippet doesn't exist yet. Go to **Library → Snippets**, click **Create snippet**, name it exactly **Product catalog** (the key is derived from the name), and paste the catalog from the lab as the body."
+  fail-message "The product-catalog snippet doesn't exist yet. Go to Library → Snippets, click Create snippet, name it exactly Product catalog (the key is derived from the name), and paste the catalog from the lab as the body."
   exit 1
 fi
 
@@ -32,18 +32,18 @@ JUDGE=$(curl -s -X GET \
   -H "$AUTH" -H 'LD-API-Version: beta')
 
 if [ "$(printf '%s' "$JUDGE" | jq -r '.key // "null"')" = "null" ]; then
-  fail-message "There's no config with key **otto-claim-accuracy-judge** yet. In **Create config**, choose **Judge**, click **Edit config key**, and set the key to \`otto-claim-accuracy-judge\` before clicking **Generate judge**."
+  fail-message "There's no config with key otto-claim-accuracy-judge yet. In Create config, choose Judge, click Edit config key, and set the key to otto-claim-accuracy-judge before clicking Generate judge."
   exit 1
 fi
 
 if [ "$(printf '%s' "$JUDGE" | jq -r '.mode // ""')" != "judge" ]; then
-  fail-message "**otto-claim-accuracy-judge** exists but isn't in **Judge** mode. Delete it and create it again with **Judge** selected."
+  fail-message "otto-claim-accuracy-judge exists but isn't in Judge mode. Delete it and create it again with Judge selected."
   exit 1
 fi
 
 SYSTEM_MSG=$(printf '%s' "$JUDGE" | jq -r '[.variations[]?] | max_by(.version) | .messages[]? | select(.role=="system") | .content' | head -c 8192)
 if ! echo "$SYSTEM_MSG" | grep -q 'snippet.product-catalog'; then
-  fail-message "The judge's **Default** variation doesn't reference the **Product catalog** snippet. Clear the System message, click **Load snippet**, choose **Product catalog**, paste the rubric below it, then **Review and save**."
+  fail-message "The judge's Default variation doesn't reference the Product catalog snippet. Clear the System message, click Load snippet, choose Product catalog, paste the rubric below it, then Review and save."
   exit 1
 fi
 
@@ -52,12 +52,12 @@ BORN=$(curl -s -X GET \
   -H "$AUTH" -H 'LD-API-Version: beta')
 ATTACHED=$(printf '%s' "$BORN" | jq -r '(.items // []) | max_by(.version) | .judgeConfiguration.judges // [] | map(select(.judgeConfigKey == "otto-claim-accuracy-judge")) | length')
 if [ "$ATTACHED" -lt 1 ]; then
-  fail-message "**Otto Claim Accuracy Judge** isn't attached to **Otto (Born)** yet. On **Otto Assistant**, expand Otto (Born), click **+ Add judges**, tick **Otto Claim Accuracy Judge**, click **Add 1 judge**, then **Review and save**."
+  fail-message "Otto Claim Accuracy Judge isn't attached to Otto (Born) yet. On Otto Assistant, expand Otto (Born), click + Add judges, tick Otto Claim Accuracy Judge, click Add 1 judge, then Review and save."
   exit 1
 fi
 
 if ! grep -q 'otto-claim-accuracy-judge' /opt/ld/ai-configs-intro/app/server.py; then
-  fail-message "Your server code doesn't invoke the claim-accuracy judge yet. Paste the second judge block from the assignment into \`server.py\` immediately below the Challenge 07 marker comment."
+  fail-message "Your server code doesn't invoke the claim-accuracy judge yet. Paste the second judge block from the assignment into server.py immediately below the Challenge 07 marker comment."
   exit 1
 fi
 

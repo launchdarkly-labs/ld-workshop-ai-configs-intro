@@ -55,25 +55,24 @@ Your job is to **configure a guarded rollout** that splits traffic between Otto 
 2. On the **Default rule** card, click the pencil (**Edit**) icon.
 3. Open the **Serve** dropdown. It groups **Variation** (each Otto variation), **Rollout** (**Manual percentage**, **Progressive rollout**, **Guarded rollout**), and **Optimize** (**Experiment**). Choose **Guarded rollout**.
 4. A guarded rollout form appears under the rule. Fill it in:
-   - **Original variation**: leave **Otto (Born)**.
+   - **Original variation**: leave it as the variation the Default rule currently serves. If you shipped the experiment winner in Challenge 06, that is **Otto (Recommender)**; otherwise it is **Otto (Born)**.
    - **Target variation**: choose **Otto (Formal)**.
-   - **Metrics to monitor**: click **Select metrics or metric groups**, tick **Otto Brand Voice Score**, click **Done**. In the metric row that appears, tick **Automatic rollback**. (Rollback direction comes from the metric itself: its success criterion is *higher is better*, so a drop counts as a regression.)
+   - **Metrics to monitor**: click **Select metrics or metric groups** and click **Otto Brand Voice Score** in the search results. The metric is added immediately; press **Escape** (or click outside the picker) to close it. In the metric row that appears, tick **Automatic rollback**. (Rollback direction comes from the metric itself: its success criterion is *higher is better*, so a drop counts as a regression.)
    - **Target by**: leave **user**.
    - **Rollout duration**: open the dropdown (it defaults to **24 hours**) and choose **Custom**. Four stages appear (5%, 10%, 25%, 50%). Set each stage's interval to **1** and its unit to **minutes** so the whole rollout fits inside the lab.
 5. Click **Review and save**. The **Save changes** dialog summarizes it as **Start release on default rule** with the rollout, original variation, duration, and metric. A **Health check warnings** notice about thin data is expected here. Click **Save**.
 
 # Watch what happens
 
-The Default rule card now shows the release **In progress**: the current split (5% **Otto (Formal)**, 95% **Otto (Born)**), the remaining stages, and a **Stop release** button. Background traffic flows through, and the brand-voice score for the Formal variation lands much lower than for Born. Within a minute or two, the rollout's regression detection should fire.
+The Default rule card now shows the release **In progress**: the current split (5% **Otto (Formal)**, 95% the original variation), the stage timeline with time remaining, a **Stop release** button, and **Not enough data, analysis pending until minimum sample size is reached** under the metric. Background traffic flows through, and the brand-voice score for the Formal variation lands much lower than for Born. Regression detection needs a minimum sample on the Formal side, so it typically fires two to three minutes in, once the rollout reaches the 25-50% stages.
 
 When it does:
 
-- The release timeline on the **Targeting** tab records the rollback.
-<!-- VERIFY: capture the exact wording LaunchDarkly uses when a guarded rollout auto-rolls back (the sandbox had no traffic, so this was not observed). -->
-- Traffic snaps back to 100% Otto (Born). The Formal variation gets dropped.
+- The Default rule card reads **Default rule rolled back automatically after detecting a regression for Otto Brand Voice Score**, with a **Review regression** link and the metric chart showing Formal's score well below the original variation.
+- Traffic snaps back to 100% of the original variation. The Formal variation gets dropped.
 - The monitoring view's brand-voice-score graph shows the dip during the rollout phase, then recovery after rollback.
 
-If you'd rather not wait, **Stop release** opens a dialog with two choices: **Roll forward** (serve Otto (Formal)) or **Roll back** (serve Otto (Born)). That's the manual version of what the guard does for you.
+If you'd rather not wait, **Stop release** opens a dialog with two choices: **Roll forward** (serve Otto (Formal)) or **Roll back** (serve the original variation). That's the manual version of what the guard does for you.
 
 # If you want to force it
 

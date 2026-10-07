@@ -152,6 +152,51 @@ def create_experiment(project_key: str, control_id: str, contender_id: str, vers
     print(f"Created experiment {EXPERIMENT_KEY}")
 
 
+def stop_if_running(project_key: str, winner_name: str = "Otto (Recommender)") -> bool:
+    """Stop a running iteration and ship `winner_name` (verified live 2026-10-06:
+    PATCH stopIteration with winningTreatmentId + winningReason -> 200, the
+    iteration goes to `stopped` and the config's fallthrough is set to the
+    winning variation, exactly like the UI's Stop -> ship flow).
+
+    Returns True if an iteration was stopped. Used by the ch06 solve (so the
+    skip path ends in the learner's end state) and defensively by ch07/ch08
+    setup+solve, because a running experiment owns the fallthrough and makes
+    startAutomatedRelease / updateFallthroughVariationOrRollout return 409.
+    """
+    try:
+        existing = request(
+            "GET",
+            f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}?expand=treatments",
+        )
+    except SystemExit as e:
+        if "404" in str(e):
+            return False
+        raise
+    iteration = existing.get("currentIteration") or {}
+    if iteration.get("status") != "running":
+        return False
+    treatments = iteration.get("treatments") or []
+    winner = next((t for t in treatments if t.get("name") == winner_name), None)
+    if winner is None:
+        winner = next((t for t in treatments if not t.get("baseline")), None)
+    if winner is None:
+        raise SystemExit("Running experiment has no treatments to ship")
+    request(
+        "PATCH",
+        f"/projects/{project_key}/environments/{ENV_KEY}/experiments/{EXPERIMENT_KEY}",
+        body={
+            "comment": "Evaluate solve: stop the experiment and ship the contender",
+            "instructions": [{
+                "kind": "stopIteration",
+                "winningTreatmentId": winner["_id"],
+                "winningReason": f"{winner_name} wins on {METRIC_KEY}",
+            }],
+        },
+    )
+    print(f"Stopped {EXPERIMENT_KEY}; shipped {winner.get('name')}")
+    return True
+
+
 def start_iteration(project_key: str) -> None:
     request(
         "PATCH",
@@ -164,7 +209,22 @@ def start_iteration(project_key: str) -> None:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--project", required=True)
+    p.add_argument(
+        "--stop-if-running",
+        action="store_true",
+        help="Only stop a running iteration (shipping Otto (Recommender)); never create/start.",
+    )
+    p.add_argument(
+        "--ship-winner",
+        action="store_true",
+        help="After creating/starting, stop the iteration and ship Otto (Recommender).",
+    )
     args = p.parse_args()
+
+    if args.stop_if_running:
+        if not stop_if_running(args.project):
+            print(f"No running iteration on {EXPERIMENT_KEY} — nothing to stop.")
+        return 0
 
     existing = experiment(args.project)
     if existing:
@@ -173,6 +233,8 @@ def main() -> int:
             start_iteration(args.project)
         else:
             print(f"Experiment {EXPERIMENT_KEY} already exists (status={status}) — no-op.")
+        if args.ship_winner:
+            stop_if_running(args.project)
         return 0
 
     t = targeting(args.project)
@@ -182,6 +244,8 @@ def main() -> int:
 
     create_experiment(args.project, control_id, contender_id, version, maintainer)
     start_iteration(args.project)
+    if args.ship_winner:
+        stop_if_running(args.project)
     return 0
 
 

@@ -26,18 +26,18 @@ JUDGE=$(curl -s -X GET \
   -H "$AUTH" -H 'LD-API-Version: beta')
 
 if [ "$(printf '%s' "$JUDGE" | jq -r '.key // "null"')" = "null" ]; then
-  fail-message "There's no config with key **otto-brand-voice-judge** yet. In **Create config**, choose **Judge**, click **Edit config key**, and set the key to \`otto-brand-voice-judge\` before you click **Generate judge**. (If you already generated one under a different key, delete it and generate again.)"
+  fail-message "There's no config with key otto-brand-voice-judge yet. In Create config, choose Judge, click Edit config key, and set the key to otto-brand-voice-judge before you click Generate judge. (If you already generated one under a different key, delete it and generate again.)"
   exit 1
 fi
 
 if [ "$(printf '%s' "$JUDGE" | jq -r '.mode // ""')" != "judge" ]; then
-  fail-message "**otto-brand-voice-judge** exists but isn't in **Judge** mode. Configs can't change mode after creation — delete it and create it again with **Judge** selected."
+  fail-message "otto-brand-voice-judge exists but isn't in Judge mode. Configs can't change mode after creation — delete it and create it again with Judge selected."
   exit 1
 fi
 
 SYSTEM_MSG=$(printf '%s' "$JUDGE" | jq -r '[.variations[]?] | max_by(.version) | .messages[]? | select(.role=="system") | .content' | head -c 8192)
 if ! echo "$SYSTEM_MSG" | grep -q 'snippet.brand-voice'; then
-  fail-message "The judge's **Default** variation doesn't reference the **Brand voice** snippet. Clear the System message, click **Load snippet**, choose **Brand voice**, paste the rubric below it, then **Review and save**."
+  fail-message "The judge's Default variation doesn't reference the Brand voice snippet. Clear the System message, click Load snippet, choose Brand voice, paste the rubric below it, then Review and save."
   exit 1
 fi
 
@@ -46,12 +46,12 @@ BORN=$(curl -s -X GET \
   -H "$AUTH" -H 'LD-API-Version: beta')
 ATTACHED=$(printf '%s' "$BORN" | jq -r '(.items // []) | max_by(.version) | .judgeConfiguration.judges // [] | map(select(.judgeConfigKey == "otto-brand-voice-judge")) | length')
 if [ "$ATTACHED" -lt 1 ]; then
-  fail-message "**Otto Brand Voice Judge** isn't attached to **Otto (Born)** yet. On **Otto Assistant**, expand Otto (Born), click **+ Add judges**, tick **Otto Brand Voice Judge**, click **Add 1 judge**, then **Review and save**."
+  fail-message "Otto Brand Voice Judge isn't attached to Otto (Born) yet. On Otto Assistant, expand Otto (Born), click + Add judges, tick Otto Brand Voice Judge, click Add 1 judge, then Review and save."
   exit 1
 fi
 
 if ! grep -q 'otto-brand-voice-judge' /opt/ld/ai-configs-intro/app/server.py; then
-  fail-message "Your server code doesn't invoke the brand-voice judge yet. Paste the judge-invocation block from the assignment into \`server.py\` immediately below the Challenge 07 marker comment."
+  fail-message "Your server code doesn't invoke the brand-voice judge yet. Paste the judge-invocation block from the assignment into server.py immediately below the Challenge 07 marker comment."
   exit 1
 fi
 

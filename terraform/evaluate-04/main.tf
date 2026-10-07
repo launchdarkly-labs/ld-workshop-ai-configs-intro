@@ -70,14 +70,20 @@ resource "null_resource" "create_product_catalog_snippet" {
     text_hash = sha256(local.product_catalog_text)
   }
 
+  # The catalog text contains both double quotes ("Ship it") and apostrophes
+  # (what's), so it can't be spliced into a shell/jq command line. Write the
+  # JSON body via a quoted heredoc instead (verified live 2026-10-06 after
+  # the jq "unexpected IDENT" failure).
   provisioner "local-exec" {
     command = <<-EOT
+      cat > /tmp/product-catalog-snippet.json <<'JSON'
+      ${jsonencode({ key = "product-catalog", name = "Product catalog", text = local.product_catalog_text, tags = ["instruqt"] })}
+      JSON
       curl -fsS -X POST \
         'https://app.launchdarkly.com/api/v2/projects/${var.project_key}/ai-configs/prompt-snippets' \
         -H "Authorization: $LAUNCHDARKLY_ACCESS_TOKEN" \
         -H 'Content-Type: application/json' \
-        --data-raw "$(jq -n --arg t "${local.product_catalog_text}" \
-          '{key:"product-catalog", name:"Product catalog", text:$t, tags:["instruqt"]}')" \
+        --data-binary @/tmp/product-catalog-snippet.json \
         || echo "(snippet may already exist — continuing)"
     EOT
   }
@@ -89,9 +95,12 @@ resource "launchdarkly_ai_config" "claim_judge" {
   project_key = var.project_key
   key         = "otto-claim-accuracy-judge"
   name        = "Otto Claim Accuracy Judge"
-  description = "Scores Otto's responses 0.0-1.0 for accuracy against the product-catalog snippet. Drives otto-claim-accuracy-score."
-  mode        = "judge"
-  tags        = ["instruqt", "ai-configs-intro"]
+  # Required by the API for judge mode ("evaluationMetricKey is required for
+  # judge mode", seen live 2026-10-06). Same shape the UI generates.
+  evaluation_metric_key = "$ld:ai:judge:otto-claim-accuracy-judge"
+  description           = "Scores Otto's responses 0.0-1.0 for accuracy against the product-catalog snippet. Drives otto-claim-accuracy-score."
+  mode                  = "judge"
+  tags                  = ["instruqt", "ai-configs-intro"]
 }
 
 resource "launchdarkly_ai_config_variation" "claim_judge_default" {

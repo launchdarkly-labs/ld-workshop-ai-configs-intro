@@ -87,7 +87,7 @@ Adding a one-sentence prompt to suggest a complementary item improves brand-voic
 9. Under **Variations split**, all three variations start at roughly 33% each. Click **Edit**, and in the **Variation Split** dialog:
   * Untick **Otto (Premium)**.
   * Click **Split equally** so **Otto (Born)** and **Otto (Recommender)** read 50% each.
-  * Click **Save audience split changes**.
+  * Click **Save audience split**.
   * Back on the page, make sure **Control** shows **Otto (Born)**.
 10. Under **Metrics**:
   * **Metric source**: leave **LaunchDarkly hosted**.

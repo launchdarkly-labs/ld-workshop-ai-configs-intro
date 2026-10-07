@@ -24,7 +24,7 @@ DATASETS=$(curl -fsS -X GET \
 DATASET_ID=$(printf '%s' "$DATASETS" | jq -r '.datasets[]? | select(.key == "otto-born-baseline" or .filename == "customer-questions.jsonl") | .id' | head -n 1)
 
 if [ -z "$DATASET_ID" ] || [ "$DATASET_ID" = "null" ]; then
-  fail-message "The **Otto Born baseline** dataset is missing from your project. The track setup should have uploaded it — click **Skip** to re-seed it."
+  fail-message "The Otto Born baseline dataset is missing from your project. The track setup should have uploaded it — click Skip to re-seed it."
   exit 1
 fi
 
@@ -34,7 +34,7 @@ PLAYGROUNDS=$(curl -fsS -X GET \
 
 PLAYGROUND_COUNT=$(printf '%s' "$PLAYGROUNDS" | jq -r '.items // [] | length')
 if [ "$PLAYGROUND_COUNT" -lt 1 ]; then
-  fail-message "You haven't created a playground yet. In the LaunchDarkly UI, switch to **Agents**, open **Playgrounds**, click **New playground**, and load the **Otto (Born)** and **Otto (Premium)** variations into sides A and B."
+  fail-message "You haven't created a playground yet. In the LaunchDarkly UI, switch to Agents, open Playgrounds, click New playground, and load the Otto (Born) and Otto (Premium) variations into sides A and B."
   exit 1
 fi
 
@@ -46,7 +46,7 @@ RUNS=$(curl -fsS -X GET \
 
 RUN_COUNT=$(printf '%s' "$RUNS" | jq -r '.items // [] | length')
 if [ "$RUN_COUNT" -lt 1 ]; then
-  fail-message "Your playground hasn't been run yet. Select the **Otto Born baseline** dataset at the bottom of the playground, add the **Answer Relevancy** criteria, and click **Run all**."
+  fail-message "Your playground hasn't been run yet. Select the Otto Born baseline dataset at the bottom of the playground, add the Answer Relevancy criteria, and click Run all."
   exit 1
 fi
 
@@ -76,9 +76,9 @@ done
 
 if [ "$FOUND_GRADED_RUN" -ne 1 ]; then
   if [ -n "$LAST_ERROR" ]; then
-    fail-message "Your run finished with an error: _${LAST_ERROR}_ — this usually means the model provider isn't reachable from the playground. Ask your instructor to check the Bedrock connection under **Manage API keys**, then click **Run all** again."
+    fail-message "Your run finished with an error: _${LAST_ERROR}_ — this usually means the model provider isn't reachable from the playground. Ask your instructor to check the Bedrock connection under Manage API keys, then click Run all again."
   else
-    fail-message "Your run hasn't finished grading yet. Wait for the **A output** and **B output** columns to fill in (usually under a minute for 15 rows), then click **Check** again."
+    fail-message "Your run hasn't finished grading yet. Wait for the A output and B output columns to fill in (usually under a minute for 15 rows), then click Check again."
   fi
   exit 1
 fi

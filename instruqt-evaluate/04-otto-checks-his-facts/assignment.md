@@ -167,6 +167,13 @@ Paste the following block **immediately below** the marker. (It'll end up above 
                     cl_messages.append(
                         {"role": m.role, "content": [{"text": m.content}]}
                     )
+            if not cl_messages:
+                # Bedrock Converse requires at least one user turn. The judge's
+                # rubric (with the response already interpolated) is the system
+                # prompt, so a short user nudge is all that's needed.
+                cl_messages.append(
+                    {"role": "user", "content": [{"text": "Score the response now."}]}
+                )
             cl_kwargs = {
                 "modelId": resolve_bedrock_model(cl_cfg.model.name),
                 "messages": cl_messages,

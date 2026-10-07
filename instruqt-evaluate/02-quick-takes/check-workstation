@@ -23,7 +23,7 @@ LATEST=$(printf '%s' "$VAR" | jq -c '(.items // []) | max_by(.version) // {}')
 JUDGE_COUNT=$(printf '%s' "$LATEST" | jq -r '.judgeConfiguration.judges // [] | length')
 
 if [ "$JUDGE_COUNT" -lt 1 ]; then
-  fail-message "No judges are attached to **Otto (Born)** yet. In the LaunchDarkly UI, open **Otto Assistant**, expand the **Otto (Born)** variation, click **+ Add judges**, pick at least one built-in (Accuracy, Relevance, or Toxicity), then **Review and save**."
+  fail-message "No judges are attached to Otto (Born) yet. In the LaunchDarkly UI, open Otto Assistant, expand the Otto (Born) variation, click + Add judges, pick at least one built-in (Accuracy, Relevance, or Toxicity), then Review and save."
   exit 1
 fi
 
@@ -32,7 +32,7 @@ BUILT_IN_COUNT=$(printf '%s' "$LATEST" | jq -r '
    | select(. == "accuracy" or . == "relevance" or . == "toxicity")] | length')
 
 if [ "$BUILT_IN_COUNT" -lt 1 ]; then
-  fail-message "Judges are attached to **Otto (Born)**, but none of them is a built-in. This challenge wants at least one of **Accuracy**, **Relevance**, or **Toxicity**."
+  fail-message "Judges are attached to Otto (Born), but none of them is a built-in. This challenge wants at least one of Accuracy, Relevance, or Toxicity."
   exit 1
 fi
 

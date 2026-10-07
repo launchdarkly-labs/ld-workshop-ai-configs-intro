@@ -10,6 +10,13 @@ cd /opt/ld/ai-configs-intro/terraform/evaluate-06
 terraform init
 terraform apply -auto-approve
 
+# A successful learner ends this challenge by stopping the experiment and
+# shipping Otto (Recommender) (Stop -> ship). Mirror that, otherwise the
+# running experiment owns the fallthrough and ch07's guarded rollout /
+# ch08's fallthrough patch come back 409 (seen live 2026-10-06).
+python3 /opt/ld/ai-configs-intro/terraform/evaluate-06/setup-experiment.py \
+  --project "${LD_PROJECT_KEY}" --stop-if-running
+
 pkill -f realchat_traffic.py 2>/dev/null || true
 
 if ! pgrep -f experiment_traffic.py > /dev/null; then

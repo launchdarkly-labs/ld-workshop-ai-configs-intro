@@ -28,13 +28,13 @@ CONFIG=$(curl -fsS -X GET \
 
 FORMAL=$(printf '%s' "$CONFIG" | jq -r '.variations[]? | select(.key=="otto-formal") | .modelConfigKey // ""')
 if [ -z "$FORMAL" ]; then
-  fail-message "The **Otto (Formal)** Nova Pro variation hasn't been created. Re-run setup, or use the **Skip** button if setup isn't working."
+  fail-message "The Otto (Formal) Nova Pro variation hasn't been created. Re-run setup, or use the Skip button if setup isn't working."
   exit 1
 fi
 case "$(echo "$FORMAL" | tr 'A-Z' 'a-z')" in
   *nova-pro*) ;;
   *)
-    fail-message "Otto (Formal) isn't using Amazon Nova Pro. Expected a model config containing **nova-pro**, got **${FORMAL}**."
+    fail-message "Otto (Formal) isn't using Amazon Nova Pro. Expected a model config containing nova-pro, got ${FORMAL}."
     exit 1
     ;;
 esac
@@ -60,9 +60,9 @@ fi
 
 HAS_PLAIN_ROLLOUT=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.rollout // empty')
 if [ -n "$HAS_PLAIN_ROLLOUT" ]; then
-  fail-message "The default rule is a plain percentage rollout, not a **guarded** one. Click **Edit** on the Default rule, open **Serve**, and choose **Guarded rollout** so a metric is watching the release."
+  fail-message "The default rule is a plain percentage rollout, not a guarded one. Click Edit on the Default rule, open Serve, and choose Guarded rollout so a metric is watching the release."
   exit 1
 fi
 
-fail-message "No guarded rollout has been started on the **Test** environment's default rule. On the **Targeting** tab, click **Edit** on the Default rule, open **Serve**, choose **Guarded rollout**, pick **Otto (Formal)** as the target, add the **Otto Brand Voice Score** metric with **Automatic rollback**, and **Review and save**."
+fail-message "No guarded rollout has been started on the Test environment's default rule. On the Targeting tab, click Edit on the Default rule, open Serve, choose Guarded rollout, pick Otto (Formal) as the target, add the Otto Brand Voice Score metric with Automatic rollback, and Review and save."
 exit 1

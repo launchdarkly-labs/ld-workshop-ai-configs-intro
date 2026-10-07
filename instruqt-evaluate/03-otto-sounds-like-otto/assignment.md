@@ -150,6 +150,13 @@ Paste the following block **immediately below** that marker line:
                     bv_messages.append(
                         {"role": m.role, "content": [{"text": m.content}]}
                     )
+            if not bv_messages:
+                # Bedrock Converse requires at least one user turn. The judge's
+                # rubric (with the response already interpolated) is the system
+                # prompt, so a short user nudge is all that's needed.
+                bv_messages.append(
+                    {"role": "user", "content": [{"text": "Score the response now."}]}
+                )
             bv_kwargs = {
                 "modelId": resolve_bedrock_model(bv_cfg.model.name),
                 "messages": bv_messages,

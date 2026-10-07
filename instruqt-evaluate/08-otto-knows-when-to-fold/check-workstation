@@ -12,17 +12,17 @@
 API="https://app.launchdarkly.com/api/v2"
 
 if [ ! -f /opt/ld/ai-configs-intro/app/adaptive.py ]; then
-  fail-message "The **adaptive.py** module isn't in the app directory yet. Create it from the lab content."
+  fail-message "The adaptive.py module isn't in the app directory yet. Create it from the lab content."
   exit 1
 fi
 
 if ! grep -q 'from adaptive import observe as adaptive_observe' /opt/ld/ai-configs-intro/app/server.py; then
-  fail-message "**server.py** doesn't import the adaptive module yet. Add \`from adaptive import observe as adaptive_observe\` to the imports."
+  fail-message "server.py doesn't import the adaptive module yet. Add from adaptive import observe as adaptive_observe to the imports."
   exit 1
 fi
 
 if ! grep -q 'adaptive_observe(score)' /opt/ld/ai-configs-intro/app/server.py; then
-  fail-message "**server.py** isn't calling \`adaptive_observe(score)\` after the brand-voice judge emits a score. Paste the one-line invocation from the lab."
+  fail-message "server.py isn't calling adaptive_observe(score) after the brand-voice judge emits a score. Paste the one-line invocation from the lab."
   exit 1
 fi
 
@@ -40,7 +40,7 @@ FALL_IDX=$(printf '%s' "$TARGETING" | jq -r '.environments.test.fallthrough.vari
 BORN_IDX=$(printf '%s' "$TARGETING" | jq -r '[.variations[]? | .value._ldMeta.variationKey] | index("otto-born") // empty')
 
 if [ -z "$FALL_IDX" ] || [ -z "$BORN_IDX" ] || [ "$FALL_IDX" != "$BORN_IDX" ]; then
-  fail-message "Your adaptive loop hasn't flipped the fallthrough back to **otto-born** yet. Give the realchat traffic another minute to accumulate samples below threshold, or check the app log: \`journalctl -u togglewear -f\`."
+  fail-message "Your adaptive loop hasn't flipped the fallthrough back to otto-born yet. Give the realchat traffic another minute to accumulate samples below threshold, or check the app log: journalctl -u togglewear -f."
   exit 1
 fi
 

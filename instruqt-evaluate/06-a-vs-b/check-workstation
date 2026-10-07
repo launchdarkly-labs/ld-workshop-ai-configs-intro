@@ -19,7 +19,7 @@ CONFIG=$(curl -fsS -X GET \
 
 CONTENDER=$(printf '%s' "$CONFIG" | jq -r '.variations[]? | select(.key=="otto-recommender") | .key // ""')
 if [ -z "$CONTENDER" ]; then
-  fail-message "The **Otto (Recommender)** variation hasn't been created yet. On the Otto Assistant config, click **Add variation**, name it exactly **Otto (Recommender)** (the key becomes \`otto-recommender\`), and use the prompt from the lab."
+  fail-message "The Otto (Recommender) variation hasn't been created yet. On the Otto Assistant config, click Add variation, name it exactly Otto (Recommender) (the key becomes otto-recommender), and use the prompt from the lab."
   exit 1
 fi
 
@@ -30,7 +30,7 @@ EXPERIMENT=$(curl -s -X GET \
 
 EXP_KEY=$(printf '%s' "$EXPERIMENT" | jq -r '.key // ""')
 if [ -z "$EXP_KEY" ]; then
-  fail-message "The **Otto Prompt Experiment** doesn't exist in the **Test** environment yet. On the Experiments page, click **Create experiment**, name it exactly **Otto Prompt Experiment**, and complete the design from the lab."
+  fail-message "The Otto Prompt Experiment doesn't exist in the Test environment yet. On the Experiments page, click Create experiment, name it exactly Otto Prompt Experiment, and complete the design from the lab."
   exit 1
 fi
 
@@ -39,7 +39,7 @@ STATUS=$(printf '%s' "$EXPERIMENT" | jq -r '.currentIteration.status // ""')
 case "$STATUS" in
   running|stopped) ;;
   *)
-    fail-message "The experiment exists but hasn't been started (status: **${STATUS:-unknown}**). Finish the design so the banner reads **Experiment design is complete**, click **Save**, then click **Start** → **Start experiment**."
+    fail-message "The experiment exists but hasn't been started (status: ${STATUS:-unknown}). Finish the design so the banner reads Experiment design is complete, click Save, then click Start → Start experiment."
     exit 1
     ;;
 esac
