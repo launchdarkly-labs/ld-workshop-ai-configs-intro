@@ -44,23 +44,16 @@ We're going to:
 
 Open the [LaunchDarkly](#tab-0) tab. Go to **Configs** → **Otto Assistant**.
 
-1. Click **Add variation**.
-2. For **Name**, enter:
+1. Click **Add variation**. A new draft variation opens below Otto (Born).
+2. For **Variation name**, enter:
 ```text
 Otto (Premium)
 ```
-3. For **Key**, confirm or enter:
-```text
-otto-premium
-```
-4. Click **Select model**, **search** for and select
-```
-anthropic.claude-sonnet-4-6
-```
-5. In prompt text area, make sure **System** is selected and clear the prompt.
-6. Click **Load snippet** and select **Brand voice**.
-7. On the next line, enter the following text:
-
+   The key `otto-premium` is derived from the name.
+3. Click **Select model**, choose **Bedrock**, search for `claude-sonnet-4-6`, and select **anthropic.claude-sonnet-4-6**.
+4. The draft has one **System** message with placeholder text. Click into it and clear it.
+5. Click **Load snippet** in the toolbar above the message and select **Brand voice**.
+6. On the next line, enter the following text:
 ```text
 You work at ToggleWear and you're talking to a premium customer. Take a little more time with them. Offer thoughtful recommendations, mention complementary items when relevant, and share interesting product details (materials, care, the story behind a design). You can be a bit warmer and more conversational.
 ```
@@ -71,17 +64,17 @@ Note what we just did: the premium prompt **reuses** the `brand-voice` and `safe
 
 # Route premium shoppers to the premium Otto
 
-Click the **Targeting** tab. Make sure the environment selector reads **test**.
+Click the **Targeting** tab. Make sure the environment pill reads **Test**.
 
-1. Above the **Default rule**, click **+** and select **Build a custom rule**.
+1. Above the **Default rule**, click **Add rule** (the **+** button) and select **Build a custom rule**.
 2. Build the clause:
-	1. Context kinds: **user**
-	2. Attribute: **tier**
-	3. Operator: **is one of**
-	4. Values: **premium** _&lt;ENTER&gt;_
-3. For the variation dropdown, select **Otto (Premium)**.
+	1. **Context kind**: leave **user**.
+	2. **Attribute**: type `tier` and pick **tier** from the list (the app has already sent contexts with that attribute).
+	3. **Operator**: **is one of**.
+	4. **Values**: type `premium` and pick **premium** (or **Add "premium"**) from the list.
+3. In the rule's **Serve** picker (**Select a variation...**), choose **Otto (Premium)**.
 4. Leave the **Default rule** as **Otto (Born)** — free shoppers and anyone without a tier still get the Haiku Otto.
-6. Click **Review and save**, then **Save changes**.
+5. Click **Review and save**. The dialog summarizes **Add rule: If user tier is one of premium serve Otto (Premium)**. Click **Save**.
 
 # See it work
 

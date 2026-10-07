@@ -42,18 +42,20 @@ Open the [LaunchDarkly](#tab-0) tab.
 
 1. Go to **Configs** → **Otto Assistant**.
 2. Click the **Monitoring** tab.
-3. Set the environment filter to **Test**.
+3. Make sure the environment pill reads **Test**. The time range defaults to **Last 7 days**.
 
-You should see a populated dashboard. Take a minute to look at it before reading further.
+You should see a populated dashboard: four summary charts across the top and a per-variation table underneath. Take a minute to look at it before reading further.
 
 # Things to look for
 
-The monitoring view shows your AgentControl's performance broken down by variation. Compare **Otto (Born)** to **Otto (Premium)**:
+The dashboard breaks Otto's performance down by variation. Compare **Otto (Born)** to **Otto (Premium)**:
 
-- **Generations**: how many times each variation was served. Born will be busier because most simulated shoppers were free-tier.
-- **Input / output tokens**: tokens by variation. Premium (Sonnet) writes longer answers, so output tokens are higher.
-- **Latency**: Sonnet is slower than Haiku. The premium variation should show a higher median latency.
-- **Positive vs. negative feedback**: both variations score well, but Premium scores noticeably better. That's not magic — it's the model. The traffic generator weighted positive feedback higher for Sonnet because, in practice, you'd expect a more capable model to produce more on-brand answers.
+- **Requests**: how many times each variation was served. Born is busier because most simulated shoppers were free-tier (roughly 80/20).
+- **Satisfaction rating**: the share of thumbs-up ratings. Both variations score well, but Premium scores noticeably better. That's not magic — it's the model. The traffic generator weighted positive feedback higher for Sonnet.
+- **Cost**: the **Total input cost** and **Total output cost** charts read **$0.00** here because the workshop's Bedrock model configs carry no price. In your own project you'd set per-token pricing on the model config (**Library → Models**) and this is where it shows up.
+- **More charts**: click the **3 selected** menu next to the time range to add **Tokens**, **Time to first token**, **Error rate** and **Request duration**, then **Apply**. Premium (Sonnet) writes longer answers, so its output tokens and request duration run higher than Born (Haiku).
+
+Below the charts, **Group by context** switches the table from per-variation to per-context-kind, and **Export data as CSV** gives you the raw numbers. The **LLM traces** panel at the bottom stays empty in this workshop; it fills in when the observability plugin is installed alongside the AI SDK.
 
 # Questions to ask yourself
 
