@@ -31,7 +31,7 @@ Author-side polish (`PHASES-evaluate.md` Phase 9) is complete as of 2026-06-01.
 
 ## Findings from the first full live runs (2026-10-06, Instruqt track `ld-agentcontrol-evaluate`)
 
-Two complete runs were driven through the real Instruqt lab: one as a participant (every UI flow clicked, every Check passed except ch01), one skipping every challenge. Fixes landed in commit `c5614c9`. Items the operator must still act on:
+Runs driven through the real Instruqt lab on 2026-10-06/07: participant passes (every UI flow clicked) and skip passes (every Skip). Final state on the pushed track (2026-10-07): **every Check passes as a participant, including ch01 on the Anthropic provider, and every Skip produces the right end state**, including a learner who clicks Check on ch07 while the guarded rollout is still running (ch08 setup stops the release and sets Formal). Fixes landed in commits `c5614c9` through `7af620a`. Items the operator must still act on:
 
 - [x] **The VM image's repo clone is stale and the track never pulls.** Resolved 2026-10-06 by the operator's decision: the Evaluate track-level `setup-workstation` now fetches/resets `/opt/ld/ai-configs-intro` to `main` at lab start (DECISIONS.md). Still worth doing: add the same block to `instruqt-build/track_scripts/setup-workstation`, and pin `REPO_REF` to a tag before a delivery.
 - [x] **Bedrock BYOK for playground runs still fails in the Instruqt LD account.** Operator confirmed 2026-10-07 it is broken on the LaunchDarkly side. Worked around: ch01 now has learners switch both columns to the Anthropic provider (`claude-haiku-4-5-20251001` / `claude-sonnet-4-6`) and the ch01 solve uses the `Anthropic.*` model configs (DECISIONS.md). Revert both when Bedrock works again.
