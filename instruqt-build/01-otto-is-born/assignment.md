@@ -45,53 +45,44 @@ By the end of this challenge:
 
 Open the [LaunchDarkly](#tab-0) tab.
 
-1. From the left-hand navigation, where you see the **Code | Agents** selector, click Agents
-2. Under Agents, click **Configs**.
-3. Click **Create config** in the upper right.
+1. In the left-hand navigation, make sure the **Code | Agents** selector reads **Agents**, then click **Configs**.
+2. Click **Create config** in the upper right.
+3. In the **Create config** dialog, leave the mode on **Completion**. (The other modes, **Agent** and **Judge**, come later in the series. A Config's mode is permanent.)
 4. For **Name**, enter:
 ```text
 Otto Assistant
 ```
-5. For **Key**, the UI should pre-fill `otto-assistant`. Confirm or set it to:
-```text
-otto-assistant
-```
-6. For **Mode**, select **Completion**.
-7. Click **Create**.
+   The key `otto-assistant` appears under the name as you type; there's an **Edit key** link if it ever differs.
+5. Click **Create**.
 
 ![Create Config](../assets/ch01-create-config.png)
 
 # Add Otto's first variation
 
-The Config exists but has no variations yet — nothing to serve. Add the "born" variation.
+The Config exists but has no variations yet — nothing to serve. You land on the **Variations** tab with an untitled draft variation open.
 
-1. You are now on the Config detail page, adding the first variation.
-2. For **Name**, enter:
+1. For **Variation name**, enter:
 ```text
 Otto (Born)
 ```
-3. For **Key**, confirm or enter:
-```text
-otto-born
-```
-4. Under **Select model**, In the search box, enter and select:
+   The variation key `otto-born` is derived from the name.
+2. Click **Select model**, choose **Bedrock**, and search for:
 ```text
 anthropic.claude-haiku-4-5-20251001-v1:0
 ```
-5. In the prompt text area, select **System**, and add this content in the prompt:
+   Select the first **anthropic.claude-haiku-4-5-20251001-v1:0** entry. A **Region** pill reading `global` appears next to the model; leave it.
+3. The draft already has one message with its role set to **System**. Replace its text with:
 ```text
 You are a customer service assistant for ToggleWear, an online retailer. Answer questions from customers about products and store policies. Be accurate and concise.
 ```
-6. Click **Review and save**, then **Save changes**.
-
-# Turn Otto on in `Test`
-
-By default Otto's `Test` environment is serving the placeholder "disabled" variation. Switch it to the Born variation we just created.
-
-1. Click the **Targeting** tab.
-2. Make sure the environment selector reads **Test**.
-3. Under **Default rule**, click **Edit** and select **Otto (Born)**.
 4. Click **Review and save**, then **Save changes**.
+
+# Confirm Otto is on in `Test`
+
+A Config's first saved variation is served automatically: the Config is **On** in `Test` and the **Default rule** serves it. Confirm it rather than assume it.
+
+1. Click the **Targeting** tab and make sure the environment pill reads **Test**.
+2. Check that the Config is **On** and the **Default rule** reads **Serve Otto (Born)**. If not, click **Edit** on the Default rule, choose **Otto (Born)**, then **Review and save** and **Save changes**.
 
 # Wire Otto into the app
 

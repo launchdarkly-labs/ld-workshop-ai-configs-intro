@@ -18,6 +18,8 @@ tags:
 owner: launchdarkly
 developers:
 - kcochran@launchdarkly.com
+- aroberson@launchdarkly.com
+- akhattak@launchdarkly.com
 show_timer: true
 idle_timeout: 1200
 timelimit: 7200
