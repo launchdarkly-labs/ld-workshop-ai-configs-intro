@@ -317,7 +317,7 @@ winning treatment's variation (same as the UI's Stop → ship flow). Used by `te
 ```
 PATCH /api/v2/projects/{proj}/ai-configs/otto-assistant/targeting
 {"comment": "", "environmentKey": "test", "instructions": [{"kind": "stopAutomatedRelease",
-  "releaseId": "<automated-releases items[].id>",
+  "releaseId": "<PARENT release id: GET /internal/projects/{proj}/flags/otto-assistant/environments/test/releases -> items[].id>",
   "finalizationBehavior": "rollBackCurrentPhase",      # the Roll forward radio presumably sends a different value (not captured)
   "fallthrough": true}]}
 ```
@@ -353,3 +353,13 @@ use `.evaluation.id`. Summary: `GET .../evaluations/{evaluation.id}/runs/{id}/su
 `statusCounts: {total, passed, failed, error, pending}`, `generationLatencyMs`, `generationTokens`, `criterionSummaries[]`.
 The UI shows "Failed" on a column when the pass rate is under the 95% threshold (14/15 = 93%); that is a grading
 verdict, not an execution error.
+
+### Release ids (verified with an API token 2026-10-07)
+`stopAutomatedRelease.releaseId` must be the **parent release** id from
+`GET /internal/projects/{proj}/flags/otto-assistant/environments/test/releases` → `items[].id`
+(each item has `phases[]` = the automated releases, with `id`, `status` `in_progress|reverted|manually_reverted|completed`,
+`endedAtMillis`). Passing the automated-release id from `.../automated-releases` returns
+`400 {"code":"invalid_request","message":"environment release not found"}`. With the right id the PATCH returns 200,
+the phase goes `manually_reverted`, and `fallthrough` is a plain variation again.
+`updateFallthroughVariationOrRollout` returns **500** for as long as a guarded release is in progress, and for a short
+while after it ends.

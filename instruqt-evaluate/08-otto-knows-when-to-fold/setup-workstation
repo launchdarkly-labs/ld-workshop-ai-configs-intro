@@ -20,17 +20,23 @@ python3 /opt/ld/ai-configs-intro/terraform/evaluate-06/setup-experiment.py \
 
 # Likewise, if the learner clicked Check on ch07 while the guarded rollout was
 # still in progress (the check passes on an active measuredRollout), the
-# release owns the Default rule. Stop it, rolling back to the original
-# variation, exactly like the UI's Stop release -> Roll back. Instruction
-# captured from the web app on 2026-10-06; releases come from the same
-# /internal endpoint ch07's check reads.
+# release owns the Default rule and the fallthrough patch below returns 500
+# for as long as it runs. Stop it, rolling back to the original variation,
+# exactly like the UI's Stop release -> Roll back.
+#
+# Verified with an API token on 2026-10-07: the `releaseId` the instruction
+# wants is the PARENT release id from
+#   GET /internal/projects/{proj}/flags/otto-assistant/environments/test/releases
+# (items[].id, whose phases[] carry the automated-release ids and statuses),
+# NOT the automated-release id from .../automated-releases (that returns
+# "environment release not found").
 API="https://app.launchdarkly.com/api/v2/projects/${LD_PROJECT_KEY}"
 INT="https://app.launchdarkly.com/internal/projects/${LD_PROJECT_KEY}"
 AUTH="Authorization: ${LAUNCHDARKLY_ACCESS_TOKEN}"
 RELEASES=$(curl -fsS -X GET \
-  "${INT}/flags/otto-assistant/automated-releases?filter=kind%3Aguarded%2CenvironmentKey%3Atest" \
+  "${INT}/flags/otto-assistant/environments/test/releases" \
   -H "$AUTH" -H 'LD-API-Version: beta' 2>/dev/null || echo '{}')
-ACTIVE_RELEASE_ID=$(printf '%s' "$RELEASES" | jq -r '[.items[]? | select(.endedAtMillis == null)] | .[0].id // empty')
+ACTIVE_RELEASE_ID=$(printf '%s' "$RELEASES" | jq -r '[.items[]? | select(any(.phases[]?; .status == "in_progress"))] | .[0].id // empty')
 if [ -n "$ACTIVE_RELEASE_ID" ]; then
   curl -fsS -X PATCH "${API}/ai-configs/otto-assistant/targeting" \
     -H "$AUTH" -H 'LD-API-Version: beta' \
@@ -42,6 +48,9 @@ if [ -n "$ACTIVE_RELEASE_ID" ]; then
     }')" > /dev/null \
     && echo "Stopped in-progress guarded release ${ACTIVE_RELEASE_ID} (rolled back)." \
     || echo "(could not stop release ${ACTIVE_RELEASE_ID}; continuing)"
+  # LD needs a moment to finalize the rollback before the fallthrough accepts
+  # a plain variation again (the Terraform step also retries).
+  sleep 10
 fi
 
 cd /opt/ld/ai-configs-intro/terraform/evaluate-08
