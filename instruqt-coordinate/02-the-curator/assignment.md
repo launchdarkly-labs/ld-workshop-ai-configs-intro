@@ -50,14 +50,9 @@ Concierge Curator
 # Write the Curator's instructions
 
 1. Name the variation `Default`.
-2. **Select model** → **Bedrock** → search `claude-haiku-4-5-20251001` → select **anthropic.claude-haiku-4-5-20251001-v1:0**.
-3. For **Description**, enter:
-```text
-Product specialist. Answers product questions from the ToggleWear catalog and nothing else.
-```
-4. Click into the empty **Instructions** box, click **Load snippet**, and choose **Product catalog**. A `{{snippet.product-catalog#1}}` chip appears.
-<!-- VERIFY: confirm Load snippet is available in the agent-mode Instructions editor and inserts the snippet reference. -->
-5. On a new line below it, paste:
+2. **Select model** → **Bedrock** → search `haiku-4-5-20251001` → select **us.anthropic.claude-haiku-4-5-20251001-v1:0**.
+3. Click into the empty **Agent task** box. A small toolbar appears above it; click **Load snippet** and choose **Product catalog**. A `{{snippet.product-catalog#1}}` chip appears.
+4. On a new line below it, paste:
 ```text
 You are the Curator, ToggleWear's product specialist. A customer asked a product question and Toggle routed it to you.
 
@@ -65,13 +60,14 @@ Answer from the catalog above and only from the catalog. Name the exact product 
 
 Write a complete, factual answer in two to four sentences. Don't worry about tone — a teammate polishes the wording before the customer sees it.
 ```
-6. Click **Review and save**, then **Save changes**.
+5. Click **Review and save**, then **Save changes**.
 
-# Turn the Curator on
+# Confirm the Curator is on
 
-1. **Targeting** tab, environment **Test**. Switch the Config **On**.
-2. On the **Default rule**, click **Edit**, open **Serve**, choose **Default**.
-3. **Review and save**, then **Save changes**.
+A config's first saved variation is served automatically: the config is switched **On** in **Test** and the **Default rule** serves **Default**. Confirm it rather than assume it.
+
+1. Click the **Targeting** tab and make sure the environment pill reads **Test**.
+2. Check that the config is **On** and the **Default rule** reads **Serve Default**. If either is off, fix it (switch **On**; **Default rule → Edit → Serve → Default**), then **Review and save** and **Save changes**.
 
 # Notice the handoff
 

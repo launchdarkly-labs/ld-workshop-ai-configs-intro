@@ -49,12 +49,8 @@ Concierge Tailor
 # Write the Tailor's instructions
 
 1. Name the variation `Default`.
-2. **Select model** → **Bedrock** → search `claude-haiku-4-5-20251001` → select **anthropic.claude-haiku-4-5-20251001-v1:0**.
-3. For **Description**, enter:
-```text
-Sizing specialist. Handles fit and measurement questions honestly.
-```
-4. For **Instructions**, paste:
+2. **Select model** → **Bedrock** → search `haiku-4-5-20251001` → select **us.anthropic.claude-haiku-4-5-20251001-v1:0**.
+3. Click into the **Agent task** box and paste:
 ```text
 You are the Tailor, ToggleWear's sizing specialist. A customer asked about fit or sizing and Toggle routed it to you.
 
@@ -64,12 +60,13 @@ You do NOT have the customer's measurements, order history, or a size chart beyo
 
 Write a complete, factual answer in two to four sentences. Don't worry about tone — a teammate polishes the wording before the customer sees it.
 ```
-5. Click **Review and save**, then **Save changes**.
+4. Click **Review and save**, then **Save changes**.
 
-# Turn the Tailor on
+# Confirm the Tailor is on
 
-1. **Targeting** tab, environment **Test**. Switch the Config **On**.
-2. On the **Default rule**, click **Edit**, open **Serve**, choose **Default**.
-3. **Review and save**, then **Save changes**.
+A config's first saved variation is served automatically: the config is switched **On** in **Test** and the **Default rule** serves **Default**. Confirm it rather than assume it.
+
+1. Click the **Targeting** tab and make sure the environment pill reads **Test**.
+2. Check that the config is **On** and the **Default rule** reads **Serve Default**. If either is off, fix it (switch **On**; **Default rule → Edit → Serve → Default**), then **Review and save** and **Save changes**.
 
 Click **Check** when the Tailor exists in agent mode with its instructions and serves Default in Test.

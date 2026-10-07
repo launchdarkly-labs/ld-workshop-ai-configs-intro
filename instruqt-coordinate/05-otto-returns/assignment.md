@@ -55,13 +55,9 @@ Concierge Otto Rewriter
 The instructions use two placeholders, `{{question}}` and `{{draft}}`. The server fills them in per request in Challenge 07. Keep them exactly as written.
 
 1. Name the variation `Default`.
-2. **Select model** → **Bedrock** → search `claude-haiku-4-5-20251001` → select **anthropic.claude-haiku-4-5-20251001-v1:0**.
-3. For **Description**, enter:
-```text
-Brand-voice rewriter. Otto rewrites every specialist draft in his own voice before it reaches the customer.
-```
-4. Click into the empty **Instructions** box, click **Load snippet**, and choose **Brand voice**. A `{{snippet.brand-voice#1}}` chip appears.
-5. On a new line below it, paste:
+2. **Select model** → **Bedrock** → search `haiku-4-5-20251001` → select **us.anthropic.claude-haiku-4-5-20251001-v1:0**.
+3. Click into the empty **Agent task** box, click **Load snippet** in the toolbar above it, and choose **Brand voice**. A `{{snippet.brand-voice#1}}` chip appears.
+4. On a new line below it, paste:
 ```text
 You are Otto in your new role on ToggleWear's Concierge team: the last stop before a response reaches the customer. A specialist has drafted a factually correct but plainly worded answer. Rewrite it in your own voice.
 
@@ -76,13 +72,14 @@ Customer's question:
 Specialist's draft:
 {{draft}}
 ```
-6. Click **Review and save**, then **Save changes**.
+5. Click **Review and save**, then **Save changes**.
 
-# Turn the rewriter on
+# Confirm the rewriter is on
 
-1. **Targeting** tab, environment **Test**. Switch the Config **On**.
-2. On the **Default rule**, click **Edit**, open **Serve**, choose **Default**.
-3. **Review and save**, then **Save changes**.
+A config's first saved variation is served automatically: the config is switched **On** in **Test** and the **Default rule** serves **Default**. Confirm it rather than assume it.
+
+1. Click the **Targeting** tab and make sure the environment pill reads **Test**.
+2. Check that the config is **On** and the **Default rule** reads **Serve Default**. If either is off, fix it (switch **On**; **Default rule → Edit → Serve → Default**), then **Review and save** and **Save changes**.
 
 # Two Ottos
 
