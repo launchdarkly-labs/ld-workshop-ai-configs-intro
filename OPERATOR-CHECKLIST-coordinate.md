@@ -9,7 +9,7 @@ Authored 2026-10-07 in one pass (Phases 2–10 of PHASES-coordinate.md). Everyth
 Three Instruqt runs on the pushed track (`instruqt track push`, lab projects `flexible-oarfish`, `divine-bull`, plus a skip-only run):
 
 - **Participant pass, ch01–ch11: green.** Every Check passed as a learner would do it (configs built in the UI, graph built in the builder, ch07/ch10 pastes applied, guarded rollout rolled back automatically at ~3.5 min, forced heal observed).
-- **Skip pass: ch01–ch06 green on two runs; ch07–ch11 run below.**
+- **Skip pass: ch01–ch11 green** (two skip runs; the second confirmed the ch09 fix below).
 - **Fixed during the runs:** track setup minted the lab token with an inline role (403; now the custom-role form used by Build/Evaluate); the welcome challenge was dropped to match the sibling tracks; the rewriter's `{{question}}`/`{{draft}}` placeholders were being rendered to empty strings by the SDK (now sent in the user turn; DECISIONS.md); ch01–ch10 assignment prose now reflects the live UI.
 - **Still open for the operator:** the items below that are unticked. Everything ticked was verified in these runs.
 
@@ -58,7 +58,7 @@ Three Instruqt runs on the pushed track (`instruqt track push`, lab projects `fl
 - [x] Setup creates **Otto Rewriter (Lite)** (Nova Lite) and starts `concierge_traffic.py` (synthetic, biased scores; see DECISIONS).
 - [x] Guarded rollout form as in Evaluate ch07: original **Default**, target **Otto Rewriter (Lite)**, metric Otto Brand Voice Score + Automatic rollback, Custom 4×1 min.
 - [x] Check passes on an active `measuredRollout` or a release in history; fails if any of the other four nodes has a rollout.
-- [ ] **Skip path for ch09** (re-verify): the first skip-only run failed here because setup and solve both applied the Terraform module and the provider hangs on the second apply (DECISIONS.md). Setup/solve now skip Terraform when the Lite variation exists; one more skip run should confirm the rollout REST call fires.
+- [x] **Skip path for ch09.** Re-verified in a fourth run after the fix: setup created the Lite variation, solve skipped Terraform ("already exists") and started the guarded rollout via REST (`measuredRollout` live on the rewriter).
 - [x] Rollback observed at ~3.5 min (50% stage): "Default rule rolled back automatically after detecting a regression for Otto Brand Voice Score" + Review regression.
 
 ### 10 Self-healing
