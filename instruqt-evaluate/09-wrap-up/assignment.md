@@ -33,7 +33,7 @@ Otto came into Evaluate already alive and on-brand. From there:
 - **Challenge 04** — got a second custom judge using the `product-catalog` snippet as ground truth. Same pattern; different concern (accuracy of claims).
 - **Challenge 06** — ran a prompt experiment. The brand-voice judge picked the winner from two variations that were a single sentence apart.
 - **Challenge 07** — set up a guarded rollout. The same brand-voice judge metric you wired in Challenge 03 caught a risky Nova Pro variation and auto-rolled-back.
-- **Challenge 08** — added a request-time safety net. A small loop in the app watches the score and flips Otto's targeting to a safe variation between requests, no rollout required.
+- **Challenge 08** — added a request-time safety net, twice: an adaptive trigger in LaunchDarkly that switches Otto's Default rule when the brand-voice score drops, and a small loop in the app that does the same thing from inside your process. No rollout required either way.
 
 # What you took with you
 

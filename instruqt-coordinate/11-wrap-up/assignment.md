@@ -37,7 +37,7 @@ Coordinate: Otto became part of a team. Toggle triages, three specialists answer
 | Timescale | Mechanism | Demonstrated in |
 |---|---|---|
 | Release time | Guarded rollout with automatic rollback | Evaluate 07, Coordinate 09 |
-| Between requests | Adaptive switching in the app | Evaluate 08 |
+| Between requests | Adaptive trigger, or adaptive switching in the app | Evaluate 08 |
 | Per request | Synchronous judge and regenerate | Coordinate 10 |
 
 Each one catches a different kind of failure at a different cost. You've built all three.

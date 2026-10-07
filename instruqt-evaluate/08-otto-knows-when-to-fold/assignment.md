@@ -40,20 +40,42 @@ You've now seen two ways to protect Otto:
 | Timescale | Mechanism | Demonstrated in |
 |---|---|---|
 | **Release time** | Guarded rollout watches a metric while ramping traffic; rolls back on regression. | Challenge 07 |
-| **Request time** | An in-app loop watches scores and adapts the active variation between requests. | This challenge |
+| **Request time** | Something watches the judge score between requests and switches the active variation when it slips: LaunchDarkly's own **adaptive trigger**, or a loop in your app. | This challenge |
 | **Per-request** | Synchronous fallback: if THIS response fails a check, regenerate before it reaches the user. | Track 3 / Coordinate (self-healing) |
 
 Each is appropriate at a different speed of failure. Guarded rollouts catch a known-bad change going into production. Adaptive switching catches a slowly-degrading production state. Self-healing catches a single bad response in flight.
 
-Today you'll wire the middle one.
+Today you'll wire the middle one, twice: first by letting LaunchDarkly do it with an **adaptive trigger** (no code), then by building the same loop yourself inside the app so you can see what the platform is doing for you.
 
 # Setup deliberately put Otto in a bad state
 
 Open the [LaunchDarkly](#tab-0) tab. Go to **Configs → Otto Assistant → Targeting**.
 
-The default rule is currently serving **Otto (Formal)** to all users. The realchat traffic generator is sending real customer questions through; Formal's corporate prompt makes the brand-voice judge unhappy on most of them; otto-brand-voice-score is dropping.
+The **Default rule** is currently serving **Otto (Formal)** to all users. (Ignore the note on the card about an experiment; that's Challenge 06's stopped experiment.) The realchat traffic generator is sending real customer questions through; Formal's corporate prompt makes the brand-voice judge unhappy on most of them, so `otto-brand-voice-score` is sitting well below 0.5.
 
-Your job: add an in-app loop that watches the score, and when the rolling mean drops below 0.5, flips the fallthrough back to **otto-born** automatically.
+# Let LaunchDarkly fold for Otto: add an adaptive trigger
+
+An adaptive trigger watches a metric and, when it crosses a threshold you set, switches a rule to a variation you choose. No code, no deploy, no human on call.
+
+1. Under the **Default rule** card (not under Rule 1), click **Add adaptive trigger**.
+2. Choose **Custom trigger**.
+3. **Source**: leave **LaunchDarkly hosted metrics**. Click **Select a metric**, type `Otto Brand` in the search box, and pick **Otto Brand Voice Score**.
+4. **Threshold**: **Type** **Constant**, **Condition** **Below**, **Alert threshold** `0.5`, **Alert window** **1 minute**. Leave **Advanced threshold settings** alone (Cooldown 30 minutes, Evaluation delay 0).
+5. **Switch variation to**: **Otto (Born)**. The summary line reads **When Otto Brand Voice Score drops below 0.5 score over 1 minute → serve Otto (Born)**.
+6. Click **Add**. A toast reads **Trigger created**, and the trigger appears under the Default rule with **Edit trigger** and **Remove trigger** controls.
+
+Now watch. Refresh the Targeting tab every 30 seconds or so. It takes two to four minutes: the alert needs a full minute of judge scores averaging below 0.5, then the trigger fires and the **Default rule** reads **Serve Otto (Born)**. The trigger stays in place, armed again after its 30-minute cooldown.
+
+That is the whole platform-native version. Everything below builds the same loop by hand.
+
+# Put Otto back in the bad state
+
+So that you can watch your own code catch it, break Otto again:
+
+1. On the **Default rule**, click **Edit**, open **Serve**, and choose **Otto (Formal)**.
+2. Click **Review and save**, then **Save**.
+
+The trigger you just added is in its 30-minute cooldown, so this time only the code you write next will fold for Otto.
 
 # Create the adaptive module
 
@@ -200,12 +222,12 @@ from adaptive import observe as adaptive_observe
 
 Save the file. The togglewear service auto-reloads.
 
-# Watch it work
+# Watch your loop work
 
 The realchat traffic generator is sending real customer questions through `/chat`. Each one triggers a brand-voice judge invocation, which emits a score, which feeds your `adaptive_observe` call.
 
 1. Open the [LaunchDarkly](#tab-0) tab. Stay on **Otto Assistant → Targeting**.
-2. Refresh every 15-30 seconds. Within about a minute (10 samples × ~5 seconds per request), the rolling window should drop below 0.5 and your loop should flip the **Default rule** to **Otto (Born)**.
+2. Refresh every 15-30 seconds. Within about a minute (10 samples × ~5 seconds per request), the rolling window should drop below 0.5 and your loop should flip the **Default rule** back to **Otto (Born)**.
 3. The flip happens silently — no notifications. Otto just starts being on-brand again.
 
 If you want to see the loop's reasoning, tail the app log:
@@ -223,8 +245,11 @@ adaptive: flipped fallthrough to otto-born
 
 # What you built
 
-A tiny request-time controller that closes the loop between an observation signal (judge score) and a control surface (the LD targeting REST API). It runs in your app, not LaunchDarkly's backend — which means you can make it as fast, slow, smart, or paranoid as you want, and you don't need any feature LaunchDarkly hasn't shipped.
+Two versions of the same request-time controller, closing the loop between an observation signal (the judge score) and a control surface (Otto's Default rule):
 
-The pattern transfers. Anywhere you have an observation metric and a control surface (a flag, a Config, a targeting rule, a feature gate), the same loop applies. The hard part is picking the right threshold and cooldown so you protect customers without thrashing — that part's on you.
+- **The adaptive trigger** runs in LaunchDarkly. It watches the metric over an alert window, fires once per cooldown, writes the targeting change for you, and is visible to everyone on the Targeting tab. Reach for it first.
+- **The in-app loop** runs in your process. It sees every score the instant it's emitted, so it can react faster and with any policy you can code (rolling window, minimum samples, cooldown, which variation is "safe"). It costs you code, and nobody can see it from the LaunchDarkly UI.
+
+The pattern transfers either way. Anywhere you have an observation metric and a control surface (a flag, a Config, a targeting rule, a feature gate), the same loop applies. The hard part is picking the right threshold and window so you protect customers without flapping.
 
 Click **Check** when the fallthrough has flipped back to otto-born.

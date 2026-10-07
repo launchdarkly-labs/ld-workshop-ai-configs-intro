@@ -37,7 +37,7 @@ You've now seen two timescales of protection:
 | Timescale | Mechanism | Where |
 |---|---|---|
 | Release time | Guarded rollout watches a metric while traffic ramps and rolls back on regression. | Evaluate 07, Coordinate 09 |
-| Between requests | An in-app loop watches the rolling score and flips targeting to a safe variation. | Evaluate 08 |
+| Between requests | An adaptive trigger (or an in-app loop) watches the score and flips targeting to a safe variation. | Evaluate 08 |
 | **Per request** | **Judge the response before the customer sees it; regenerate if it fails.** | **This challenge** |
 
 The first two protect the *next* customers. Self-healing protects *this* customer. It costs latency: one extra model call to grade, and occasionally a second to regenerate. The Concierge makes that trade deliberately, at the one node where it matters most: Otto's final wording.
