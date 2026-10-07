@@ -46,7 +46,7 @@ Open the [LaunchDarkly](#tab-0) tab.
 ```text
 Product catalog
 ```
-   There is no key field. LaunchDarkly derives the key from the name, so this name yields `product-catalog`, which is the key the judge prompt and the server code reference.
+   LaunchDarkly derives the key from the name, so this name yields `product-catalog`, which is the key the judge prompt and the server code reference. (The dialog has an **Edit key** button; you only need it if the derived key reads differently.)
 3. Leave **Description** empty.
 4. For **Body**, paste:
 ```text
