@@ -297,3 +297,37 @@ does) under **dash** (`/bin/sh` on Ubuntu) and zsh, because their `echo`
 expands backslash escapes. Use `printf '%s' "$JSON" | jq`. All Evaluate
 check/solve scripts and `terraform/evaluate-*/main.tf` were converted on
 2026-10-06; the Build track still uses `echo` in three check scripts.
+
+
+## Verified live on 2026-10-06 (Instruqt lab, Hands-on Workshops account)
+
+### Stop an experiment iteration and ship a treatment (`/api/v2`)
+
+```
+PATCH /api/v2/projects/{proj}/environments/test/experiments/otto-prompt-experiment
+{"comment": "...", "instructions": [{"kind": "stopIteration",
+  "winningTreatmentId": "<currentIteration.treatments[].\_id>",   # GET ...?expand=treatments
+  "winningReason": "Recommender wins on brand-voice score"}]}
+```
+→ 200, `currentIteration.status == "stopped"`, and the config's `fallthrough.variation` is set to the
+winning treatment's variation (same as the UI's Stop → ship flow). Used by `terraform/evaluate-06/setup-experiment.py --stop-if-running`.
+
+### Stop an in-progress guarded rollout (what the UI's **Stop release → Roll back** sends)
+
+```
+PATCH /api/v2/projects/{proj}/ai-configs/otto-assistant/targeting
+{"comment": "", "environmentKey": "test", "instructions": [{"kind": "stopAutomatedRelease",
+  "releaseId": "<automated-releases items[].id>",
+  "finalizationBehavior": "rollBackCurrentPhase",      # the Roll forward radio presumably sends a different value (not captured)
+  "fallthrough": true}]}
+```
+→ 200 with the full targeting document; `fallthrough` becomes the original variation. The release
+list is `GET /internal/projects/{proj}/flags/otto-assistant/automated-releases?filter=kind:guarded,environmentKey:test`;
+an in-progress release has `endedAtMillis == null`, finished ones carry `status` `reverted` / `completed`.
+Release items also expose `events[]` (`stage_started`, `monitoring_window_expired`, `completed`,
+`safe_roll_forward`, `regression_detected`, `reverted`) and `metricConfigurations[]`
+(`minSampleSize`, `regressionThreshold`, `statisticalConfidenceThreshold`, `statsModel`, `status`).
+
+### 409s to expect
+- `startAutomatedRelease` and `updateFallthroughVariationOrRollout` return **409** while an experiment
+  iteration is running on the fallthrough, and (for the latter) while a guarded rollout is in progress.
