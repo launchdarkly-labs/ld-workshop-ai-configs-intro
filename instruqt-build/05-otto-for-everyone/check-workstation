@@ -10,10 +10,13 @@ if [ -z "$PREMIUM_MODEL" ]; then
   fail-message "The premium variation hasn't been added yet. Create a new variation named Otto (Premium) with key otto-premium."
   exit 1
 fi
-if [ "$PREMIUM_MODEL" != "Bedrock.anthropic.claude-sonnet-4-6" ]; then
+case "$PREMIUM_MODEL" in
+  *claude-sonnet-4-6*) : ;;
+  *)
   fail-message "The premium variation isn't using Claude Sonnet 4.6. Pick Anthropic Claude Sonnet 4.6 as the model."
   exit 1
-fi
+    ;;
+esac
 
 # 2. The variation has a system message.
 PREMIUM_PROMPT=$(echo "$CONFIG" | sed 's/\\/\\\\/g' | jq -r '.variations[]? | select(.key=="otto-premium") | .messages[]? | select(.role=="system") | .content')

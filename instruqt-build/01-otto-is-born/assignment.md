@@ -107,6 +107,7 @@ Find the block marked:
 Replace **everything between the opening marker and the** `# ─── End Challenge 01 paste block ────` **line** with:
 
 ```python
+    # ─── Challenge 01: wire Otto to /chat ─────────────────────────────────
     # Build context, evaluate the otto-assistant Config.
     context = Context.builder(req.session_id).set("tier", req.user_tier).build()
     cfg = ai_client.completion_config(OTTO_CONFIG_KEY, context, FALLBACK_CONFIG)
@@ -142,10 +143,11 @@ Replace **everything between the opening marker and the** `# ─── End Chall
             bedrock.converse(modelId=model_id, messages=bedrock_messages, system=system_blocks)
         )
     except ClientError as e:
-        code = e.response.get("Error", {}).get("Code")
-        log.error("Bedrock ClientError: %s", code)
+        err = e.response.get("Error", {})
+        log.error("Bedrock ClientError code=%s model=%s message=%s",
+                  err.get("Code"), model_id, err.get("Message"))
         return JSONResponse(status_code=502, content={
-            "response": _bedrock_user_message(code),
+            "response": _bedrock_user_message(err.get("Code")),
             "turn": turn, "turn_limit": TURN_LIMIT,
         })
 

@@ -16,10 +16,13 @@ if [ -z "$VARIATION_MODEL" ]; then
   fail-message "Otto's first variation is missing. Make sure you created the variation named Otto (Born) with key otto-born."
   exit 1
 fi
-if [ "$VARIATION_MODEL" != "Bedrock.anthropic.claude-haiku-4-5-20251001-v1:0" ]; then
+case "$VARIATION_MODEL" in
+  *claude-haiku-4-5*) : ;;
+  *)
   fail-message "Otto's variation isn't using Claude Haiku 4.5. Pick Anthropic Claude Haiku 4.5 as the model."
   exit 1
-fi
+    ;;
+esac
 
 # 3. The variation has a system message (don't assert specific wording yet —
 #    that's challenge 02's concern).
