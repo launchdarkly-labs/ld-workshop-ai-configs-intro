@@ -435,3 +435,12 @@ AgentControl Configs are mode-permanent — once created in `completion` mode, a
 **Rationale:** The previous solve for ch07 fell back to a plain percentage rollout, which the rewritten check correctly rejects as "not guarded". Skip must land in the same state as a successful learner.
 
 **Trade-offs accepted:** `startAutomatedRelease` is a public endpoint but the guarded-release history used by the check lives on an internal endpoint; the check only needs it when the rollout has already finished or rolled back.
+
+## The track-level setup syncs the VM's repo clone to `main` on every lab start (2026-10-06)
+
+**Decision:** `instruqt-evaluate/track_scripts/setup-workstation` now runs `git fetch --depth 1 origin main && git reset --hard FETCH_HEAD` on `/opt/ld/ai-configs-intro` before applying any Terraform or server patches. If the fetch fails the lab continues with the baked copy.
+
+**Why:** the VM image bakes a shallow clone and nothing pulled it afterwards. The first live run (2026-10-06) ran today's assignments against a clone from Sep 16 (a26c6ea), so every Terraform/paste fix pushed since was invisible until an image re-bake. Re-baking for each script change is slow and easy to forget; a sync at lab start makes pushes take effect on the next launch.
+
+**Consequences:** the lab tracks `main` live, so a broken push breaks the next lab start (keep `main` releasable, or pin `REPO_REF` to a tag when the workshop is being delivered). Only tracked files change: `app/.env` is gitignored and the Challenge-01 `server.py` patch is re-applied after the sync. Challenge setup/check/solve scripts are not affected by this at all; they come from `instruqt track push`. The Build track does not have the sync yet.
+

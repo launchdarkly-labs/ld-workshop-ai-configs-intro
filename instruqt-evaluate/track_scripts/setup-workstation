@@ -17,6 +17,24 @@ until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
 done
 
 REPO=/opt/ld/ai-configs-intro
+REPO_URL="https://github.com/launchdarkly-labs/ld-workshop-ai-configs-intro.git"
+REPO_REF="${REPO_REF:-main}"
+
+# 0. Sync the baked repo clone to the current commit. The VM image bakes a
+#    shallow clone at build time and nothing else ever pulls it, so without
+#    this every Terraform module, server paste and traffic script in the lab
+#    is frozen at image-bake time (the first live run on 2026-10-06 ran a
+#    month-old clone). Tracked files only: app/.env is gitignored and the
+#    Challenge-01 server.py patch is re-applied in step 5 below. If GitHub is
+#    unreachable we carry on with the baked copy rather than fail the lab.
+echo "Syncing ${REPO} to ${REPO_REF}"
+if git -C "${REPO}" remote set-url origin "${REPO_URL}" \
+   && git -C "${REPO}" fetch --depth 1 origin "${REPO_REF}" \
+   && git -C "${REPO}" reset --hard FETCH_HEAD; then
+    echo "Repo at $(git -C "${REPO}" rev-parse --short HEAD)"
+else
+    echo "WARNING: could not sync ${REPO}; continuing with the baked copy at $(git -C "${REPO}" rev-parse --short HEAD)"
+fi
 
 # 1. Bootstrap the LD project.
 cd /opt/ld/terraform-ld-student
