@@ -54,29 +54,39 @@ fi
 # provider error has state PERMANENT_ERROR and a statusReason we can surface.
 FOUND_GRADED_RUN=0
 LAST_ERROR=""
-for ROW in $(printf '%s' "$RUNS" | jq -r '.items[] | "\(.evaluationId)|\(.id)|\(.state)"'); do
+# Run items (verified live 2026-10-07): {id, evaluation:{id,name,...}, dataset,
+# state (PENDING | COMPLETE | PERMANENT_ERROR), rowCount, selectedRowCount,
+# completedCount, failedCount, statusReason?}. The evaluation id is nested,
+# not a top-level evaluationId.
+for ROW in $(printf '%s' "$RUNS" | jq -r '.items[] | "\(.evaluation.id // .evaluationId // "")|\(.id)|\(.state)|\(.completedCount // 0)"'); do
   EVAL_ID=$(echo "$ROW" | cut -d'|' -f1)
   RUN_ID=$(echo "$ROW" | cut -d'|' -f2)
   STATE=$(echo "$ROW" | cut -d'|' -f3)
-
+  COMPLETED=$(echo "$ROW" | cut -d'|' -f4)
   if [ "$STATE" = "PERMANENT_ERROR" ]; then
     LAST_ERROR=$(printf '%s' "$RUNS" | jq -r --arg id "$RUN_ID" '.items[] | select(.id == $id) | .statusReason // ""')
     continue
   fi
-
-  SUMMARY=$(curl -fsS -X GET \
-    "${API}/evaluations/${EVAL_ID}/runs/${RUN_ID}/summary" \
-    -H "$AUTH" -H 'LD-API-Version: beta')
-  GRADED=$(printf '%s' "$SUMMARY" | jq -r '(.statusCounts.passed // 0) + (.statusCounts.failed // 0)')
-  if [ "$GRADED" -gt 0 ]; then
+  if [ "$STATE" = "COMPLETE" ] && [ "${COMPLETED:-0}" -gt 0 ]; then
     FOUND_GRADED_RUN=1
     break
+  fi
+  # Fall back to the summary (statusCounts: total/passed/failed/error/pending).
+  if [ -n "$EVAL_ID" ]; then
+    SUMMARY=$(curl -fsS -X GET \
+      "${API}/evaluations/${EVAL_ID}/runs/${RUN_ID}/summary" \
+      -H "$AUTH" -H 'LD-API-Version: beta' 2>/dev/null || echo '{}')
+    GRADED=$(printf '%s' "$SUMMARY" | jq -r '(.statusCounts.passed // 0) + (.statusCounts.failed // 0)')
+    if [ "${GRADED:-0}" -gt 0 ]; then
+      FOUND_GRADED_RUN=1
+      break
+    fi
   fi
 done
 
 if [ "$FOUND_GRADED_RUN" -ne 1 ]; then
   if [ -n "$LAST_ERROR" ]; then
-    fail-message "Your run finished with an error: _${LAST_ERROR}_ — this usually means the model provider isn't reachable from the playground. Ask your instructor to check the Bedrock connection under Manage API keys, then click Run all again."
+    fail-message "Your run finished with an error: ${LAST_ERROR}. This usually means the playground could not reach the model provider. Make sure both columns use the Anthropic provider (not Bedrock), then click Run all again."
   else
     fail-message "Your run hasn't finished grading yet. Wait for the A output and B output columns to fill in (usually under a minute for 15 rows), then click Check again."
   fi

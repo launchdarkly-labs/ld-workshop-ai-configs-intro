@@ -55,13 +55,13 @@ Otto Born baseline
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
 2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Born)**.
 3. Click **Load config**.
-4. The model selector at the top of side A now reads **anthropic.claude-haiku-4-5-20251001-v1:0** (Bedrock), copied from the variation. Playground runs in this workshop account go through LaunchDarkly's Anthropic connection rather than Bedrock, so swap it for the same model on the Anthropic provider: click the model selector, choose **Anthropic** in the provider list, search for the text below, and select the match.
+4. Loading the config copies the variation's Bedrock model (**anthropic.claude-haiku-4-5-20251001-v1:0**) into side A. Playground runs in this workshop account go through LaunchDarkly's Anthropic connection rather than Bedrock, so swap it for the same model on the Anthropic provider: click the model selector at the top of side A, click **Anthropic** at the top of the **Select model** dialog, type the text below into **Search models...**, and click the single match.
 ```text
 claude-haiku-4-5-20251001
 ```
    This only changes which API key the playground uses to call Haiku 4.5. Otto's variation in production still runs on Bedrock.
-5. Below the loaded prompt textarea, click **Add message**. The new message defaults to the **User** role.
-6. In the new message textarea, enter:
+5. Loading the config replaced the column's messages with the variation's system prompt, so add the customer turn back: below the prompt, click **Add message**. The new message defaults to the **User** role with placeholder text.
+6. Select all of the placeholder text in the new message and replace it with:
 ```text
 {{input}}
 ```
@@ -71,12 +71,12 @@ claude-haiku-4-5-20251001
 1. Click the ![Load Config](../assets/otto-load-config.png) icon to load from a config.
 2. Click **Otto Assistant** on the left, then open **Select a variation** on the right and choose **Otto (Premium)**.
 3. Click **Load config**.
-4. The model selector at the top of side B now reads **anthropic.claude-sonnet-4-6** (Bedrock). Swap it the same way: click the model selector, choose **Anthropic**, search for the text below, and select the match.
+4. Side B now shows the variation's Bedrock model (**anthropic.claude-sonnet-4-6**). Swap it the same way: click the model selector, click **Anthropic**, search for the text below, and click the match.
 ```text
 claude-sonnet-4-6
 ```
-5. Below the loaded prompt textarea, click **Add message**. The new message defaults to the **User** role.
-6. In the new message textarea, enter:
+5. Loading the config replaced the column's messages with the variation's system prompt, so add the customer turn back: below the prompt, click **Add message**. The new message defaults to the **User** role with placeholder text.
+6. Select all of the placeholder text in the new message and replace it with:
 ```text
 {{input}}
 ```
@@ -85,7 +85,7 @@ claude-sonnet-4-6
 
 1. At the bottom of the screen, grab and drag the dark gray bar up so you can see the controls.
 2. Click **Select a dataset (optional)**, and select **Otto Born baseline**.
-3. To the right of the selector, click **Random**. The **Rows** field resets to 30 — change it to **15**.
+3. To the right of the selector, click **Random**. In the **Rows** field next to it (it defaults to 5), enter **15**.
 
 # Configure acceptance criteria
 

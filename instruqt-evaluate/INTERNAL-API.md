@@ -339,3 +339,17 @@ Release items also expose `events[]` (`stage_started`, `monitoring_window_expire
   Anything that needs the release list (ch07 check, ch08 setup guard) must run with `LAUNCHDARKLY_ACCESS_TOKEN`.
 - Guarded rollouts in the lab auto-revert fast once Formal gets traffic (observed +106s, +167s, +171s), so an
   in-progress release is a narrow window to test against.
+
+### Completed playground runs (verified live 2026-10-07, Anthropic provider)
+`GET /internal/projects/{proj}/evaluations/runs?source=playground,api&limit=50` → `items[]`:
+```
+{"id": "<uuid>", "evaluation": {"id": "<uuid>", "version": 3, "name": "Otto Born baseline", "messages": [...],
+  "generationProvider": "Anthropic", "generationModel": "Anthropic.claude-sonnet-4-6", ...},
+ "dataset": {...}, "createdAt": ..., "completedAt": ..., "state": "COMPLETE",
+ "rowCount": 30, "selectedRowCount": 15, "completedCount": 15, "failedCount": 1, "createdBy": {...}}
+```
+`state` is `PENDING` → `COMPLETE` (or `PERMANENT_ERROR` with `statusReason`). There is **no** top-level `evaluationId`;
+use `.evaluation.id`. Summary: `GET .../evaluations/{evaluation.id}/runs/{id}/summary` →
+`statusCounts: {total, passed, failed, error, pending}`, `generationLatencyMs`, `generationTokens`, `criterionSummaries[]`.
+The UI shows "Failed" on a column when the pass rate is under the 95% threshold (14/15 = 93%); that is a grading
+verdict, not an execution error.
